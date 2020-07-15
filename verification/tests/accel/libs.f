@@ -1,0 +1,2 @@
+work.glbl
+blk_mem_gen_v8_4_3
