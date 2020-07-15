@@ -58,33 +58,31 @@ package pito_pkg;
 
         // MVU CSRs            32-63
         CSR_MVU_MUL_MODE   = 12'hF20,            // Config: multiply mode
-        CSR_MVU_MAX_EN     = 12'hF21,            // Config: max pool enable
-        CSR_MVU_MAX_POOL   = 12'hF22,            // Config: max pool mode
-        CSR_MVU_COUNTDOWN  = 12'hF23,            // Config: number of clocks to countdown for given task
-        CSR_MVU_WPRECISION = 12'hF24,            // Config: weight precision
-        CSR_MVU_IPRECISION = 12'hF25,            // Config: input precision
-        CSR_MVU_OPRECISION = 12'hF26,            // Config: output precision
-        CSR_MVU_WBASEADDR  = 12'hF27,            // Config: weight memory base address
-        CSR_MVU_IBASEADDR  = 12'hF28,            // Config: data memory base address for input
-        CSR_MVU_OBASEADDR  = 12'hF29,            // Config: data memory base address for output
-        CSR_MVU_WSTRIDE_0  = 12'hF2A,            // Config: weight stride in dimension 0 (x)
-        CSR_MVU_WSTRIDE_1  = 12'hF2B,            // Config: weight stride in dimension 1 (y)
-        CSR_MVU_WSTRIDE_2  = 12'hF2C,            // Config: weight stride in dimension 2 (z)
-        CSR_MVU_ISTRIDE_0  = 12'hF2D,            // Config: input stride in dimension 0 (x)
-        CSR_MVU_ISTRIDE_1  = 12'hF2E,            // Config: input stride in dimension 1 (y)
-        CSR_MVU_ISTRIDE_2  = 12'hF2F,            // Config: input stride in dimension 2 (z)
-        CSR_MVU_OSTRIDE_0  = 12'hF30,            // Config: output stride in dimension 0 (x)
-        CSR_MVU_OSTRIDE_1  = 12'hF31,            // Config: output stride in dimension 1 (y)
-        CSR_MVU_OSTRIDE_2  = 12'hF32,            // Config: output stride in dimension 2 (z)
-        CSR_MVU_WLENGTH_0  = 12'hF33,            // Config: weight length in dimension 0 (x)
-        CSR_MVU_WLENGTH_1  = 12'hF34,            // Config: weight length in dimension 1 (y)
-        CSR_MVU_WLENGTH_2  = 12'hF35,            // Config: weight length in dimension 2 (z)
-        CSR_MVU_ILENGTH_0  = 12'hF36,            // Config: input length in dimension 0 (x)
-        CSR_MVU_ILENGTH_1  = 12'hF37,            // Config: input length in dimension 1 (y)
-        CSR_MVU_ILENGTH_2  = 12'hF38,            // Config: input length in dimension 2 (z)
-        CSR_MVU_OLENGTH_0  = 12'hF39,            // Config: output length in dimension 0 (x)
-        CSR_MVU_OLENGTH_1  = 12'hF3A,            // Config: output length in dimension 1 (y)
-        CSR_MVU_OLENGTH_2  = 12'hF3B             // Config: output length in dimension 2 (z)
+        CSR_MVU_COUNTDOWN  = 12'hF21,            // Config: number of clocks to countdown for given task
+        CSR_MVU_WPRECISION = 12'hF22,            // Config: weight precision
+        CSR_MVU_IPRECISION = 12'hF23,            // Config: input precision
+        CSR_MVU_OPRECISION = 12'hF24,            // Config: output precision
+        CSR_MVU_WBASEADDR  = 12'hF25,            // Config: weight memory base address
+        CSR_MVU_IBASEADDR  = 12'hF26,            // Config: data memory base address for input
+        CSR_MVU_OBASEADDR  = 12'hF27,            // Config: data memory base address for output
+        CSR_MVU_WSTRIDE_0  = 12'hF28,            // Config: weight stride in dimension 0 (x)
+        CSR_MVU_WSTRIDE_1  = 12'hF29,            // Config: weight stride in dimension 1 (y)
+        CSR_MVU_WSTRIDE_2  = 12'hF2A,            // Config: weight stride in dimension 2 (z)
+        CSR_MVU_ISTRIDE_0  = 12'hF2B,            // Config: input stride in dimension 0 (x)
+        CSR_MVU_ISTRIDE_1  = 12'hF2C,            // Config: input stride in dimension 1 (y)
+        CSR_MVU_ISTRIDE_2  = 12'hF2D,            // Config: input stride in dimension 2 (z)
+        CSR_MVU_OSTRIDE_0  = 12'hF2E,            // Config: output stride in dimension 0 (x)
+        CSR_MVU_OSTRIDE_1  = 12'hF2F,            // Config: output stride in dimension 1 (y)
+        CSR_MVU_OSTRIDE_2  = 12'hF30,            // Config: output stride in dimension 2 (z)
+        CSR_MVU_WLENGTH_0  = 12'hF31,            // Config: weight length in dimension 0 (x)
+        CSR_MVU_WLENGTH_1  = 12'hF32,            // Config: weight length in dimension 1 (y)
+        CSR_MVU_WLENGTH_2  = 12'hF33,            // Config: weight length in dimension 2 (z)
+        CSR_MVU_ILENGTH_0  = 12'hF34,            // Config: input length in dimension 0 (x)
+        CSR_MVU_ILENGTH_1  = 12'hF35,            // Config: input length in dimension 1 (y)
+        CSR_MVU_ILENGTH_2  = 12'hF36,            // Config: input length in dimension 2 (z)
+        CSR_MVU_OLENGTH_0  = 12'hF37,            // Config: output length in dimension 0 (x)
+        CSR_MVU_OLENGTH_1  = 12'hF38,            // Config: output length in dimension 1 (y)
+        CSR_MVU_OLENGTH_2  = 12'hF39             // Config: output length in dimension 2 (z)
     } csr_t;
 
 
