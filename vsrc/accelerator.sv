@@ -22,15 +22,23 @@ module accelerator #(
     parameter  BQMSBIDX = $clog2(BACC),     // Bitwidth of the quantizer MSB location specifier
     parameter  BQBOUT   = $clog2(BACC)     // Bitwitdh of the quantizer 
 )(
-    input logic              io_clk,
-    input logic              io_rst_n,  
-    input rv32_imem_addr_t   io_imem_addr,
-    input rv32_instr_t       io_imem_data,
-    input rv32_dmem_addr_t   io_dmem_addr,
-    input rv32_data_t        io_dmem_data,
-    input logic              io_imem_w_en,
-    input logic              io_dmem_w_en,
-    input logic              io_pito_program
+    input logic                      clk,
+    input logic                      rst_n,  
+    input rv32_imem_addr_t           pito_imem_addr,
+    input rv32_instr_t               pito_imem_data,
+    input rv32_dmem_addr_t           pito_dmem_addr,
+    input rv32_data_t                pito_dmem_data,
+    input logic                      pito_imem_w_en,
+    input logic                      pito_dmem_w_en,
+    input logic                      pito_pito_program,
+
+    input logic [        NMVU-1 : 0] mvu_wrc_en  , // input  wrc_en;
+    input logic [        NMVU-1 : 0] mvu_wrc_grnt, // output wrc_grnt;
+    input logic [     BDBANKA-1 : 0] mvu_wrc_addr, // input  wrc_addr;
+    input logic [     BDBANKW-1 : 0] mvu_wrc_word, // input  wrc_word;
+    input logic [NMVU*BWBANKA-1 : 0] mvu_wrw_addr, // Weight memory: write address
+    input logic [NMVU*BWBANKW-1 : 0] mvu_wrw_word, // Weight memory: write word
+    input logic [        NMVU-1 : 0] mvu_wrw_en    // Weight memory: write enable
 
 );
 
@@ -50,10 +58,6 @@ module accelerator #(
     logic [        NMVU-1 : 0] mvu_rdc_grnt     ; // output rdc_grnt;
     logic [NMVU*BDBANKA-1 : 0] mvu_rdc_addr     ; // input  rdc_addr;
     logic [NMVU*BDBANKW-1 : 0] mvu_rdc_word     ; // output rdc_word;
-    logic [        NMVU-1 : 0] mvu_wrc_en       ; // input  wrc_en;
-    logic [        NMVU-1 : 0] mvu_wrc_grnt     ; // output wrc_grnt;
-    logic [     BDBANKA-1 : 0] mvu_wrc_addr     ; // input  wrc_addr;
-    logic [     BDBANKW-1 : 0] mvu_wrc_word     ; // input  wrc_word;
     logic [         NMVU-1 : 0] mvu_quant_clr   ; // Quantizer: clear
     logic [NMVU*BQMSBIDX-1 : 0] mvu_quant_msbidx; // Quantizer: bit position index of the MSB
     logic [         NMVU-1 : 0] mvu_quant_start ; // Quantizer: signal to start quantizing
@@ -64,9 +68,6 @@ module accelerator #(
     logic[  NMVU*BBWADDR-1 : 0] mvu_wbaseaddr   ; // Config: weight memory base address
     logic[  NMVU*BBDADDR-1 : 0] mvu_ibaseaddr   ; // Config: data memory base address for input
     logic[  NMVU*BBDADDR-1 : 0] mvu_obaseaddr   ; // Config: data memory base address for output
-    logic[  NMVU*BWBANKA-1 : 0] mvu_wrw_addr    ; // Weight memory: write address
-    logic[  NMVU*BWBANKW-1 : 0] mvu_wrw_word    ; // Weight memory: write word
-    logic[          NMVU-1 : 0] mvu_wrw_en      ; // Weight memory: write enable
     logic[  NMVU*BSTRIDE-1 : 0] mvu_wstride_0   ; // Config: weight stride in dimension 0 (x)
     logic[  NMVU*BSTRIDE-1 : 0] mvu_wstride_1   ; // Config: weight stride in dimension 1 (y)
     logic[  NMVU*BSTRIDE-1 : 0] mvu_wstride_2   ; // Config: weight stride in dimension 2 (z)
@@ -87,8 +88,8 @@ module accelerator #(
     logic[  NMVU*BLENGTH-1 : 0] mvu_olength_2   ; // Config: output length in dimension 2 (z)
 
 
-    assign mvu_clk   = io_clk;
-    assign mvu_rst_n = io_rst_n;
+    assign mvu_clk   = clk;
+    assign mvu_rst_n = rst_n;
 
     assign mvu_ic_clr        = 0;
     assign mvu_ic_recv_from  = 0;
@@ -167,19 +168,19 @@ module accelerator #(
             .wrc_word         (mvu_wrc_word     )
         );
 
-    assign pito_clk   = io_clk;
-    assign pito_rst_n = io_rst_n;
+    assign pito_clk   = clk;
+    assign pito_rst_n = rst_n;
 
 rv32_core pito_rv32_core(
     .pito_io_clk      (pito_clk         ),
     .pito_io_rst_n    (pito_rst_n       ),
-    .pito_io_imem_addr(io_imem_addr     ),
-    .pito_io_imem_data(io_imem_data     ),
-    .pito_io_dmem_addr(io_dmem_addr     ),
-    .pito_io_dmem_data(io_dmem_data     ),
-    .pito_io_imem_w_en(io_imem_w_en     ),
-    .pito_io_dmem_w_en(io_dmem_w_en     ),
-    .pito_io_program  (io_pito_program  ),
+    .pito_io_imem_addr(pito_imem_addr   ),
+    .pito_io_imem_data(pito_imem_data   ),
+    .pito_io_dmem_addr(pito_dmem_addr   ),
+    .pito_io_dmem_data(pito_dmem_data   ),
+    .pito_io_imem_w_en(pito_imem_w_en   ),
+    .pito_io_dmem_w_en(pito_dmem_w_en   ),
+    .pito_io_program  (pito_pito_program),
     .mvu_irq_i        (mvu_irq          ),
     .mvu_mul_mode     (mvu_mul_mode     ),
     .mvu_countdown    (mvu_countdown    ),

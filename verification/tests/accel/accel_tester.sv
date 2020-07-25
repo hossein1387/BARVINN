@@ -2,10 +2,17 @@ import utils::*;
 import rv32_utils::*;
 import pito_pkg::*;
 
-module accel_tester ();
+module accel_tester();
 //==================================================================================================
 // Global Variables
     localparam CLOCK_SPEED          = 50; // 10MHZ
+    localparam NMVU                 = 8;   /* Number of MVUs. Ideally a Power-of-2. */
+    localparam N                    = 64;   /* N x N matrix-vector product size. Power-of-2. */
+    localparam BWBANKA              = 9;             /* Bitwidth of Weights BANK Address */
+    localparam BWBANKW              = 4096;          // Bitwidth of Weights BANK Word
+    localparam BDBANKA              = 15;            /* Bitwidth of Data    BANK Address */
+    localparam BDBANKW              = N;             /* Bitwidth of Data    BANK Word */
+
     Logger logger;
     rv32_utils::RV32IDecoder rv32i_dec;
     rv32_utils::RV32IPredictor rv32i_pred;
@@ -23,16 +30,32 @@ module accel_tester ();
     logic              dmem_w_en;
     logic              pito_program;
     logic [pito_pkg::HART_CNT_WIDTH-1:0] mvu_irq;
+
+    logic [        NMVU-1 : 0] mvu_wrc_en  ;  // input  wrc_en;
+    logic [        NMVU-1 : 0] mvu_wrc_grnt;  // output wrc_grnt;
+    logic [     BDBANKA-1 : 0] mvu_wrc_addr;  // input  wrc_addr;
+    logic [     BDBANKW-1 : 0] mvu_wrc_word;  // input  wrc_word;
+    logic [NMVU*BWBANKA-1 : 0] mvu_wrw_addr;  // Weight memory: write address
+    logic [NMVU*BWBANKW-1 : 0] mvu_wrw_word;  // Weight memory: write word
+    logic [        NMVU-1 : 0] mvu_wrw_en  ;  // Weight memory: write enable
+
     accelerator accelerator(
-                    .io_clk         (clk            ),
-                    .io_rst_n       (rst_n          ),
-                    .io_imem_addr   (imem_addr      ),
-                    .io_imem_data   (imem_data      ),
-                    .io_dmem_addr   (dmem_addr      ),
-                    .io_dmem_data   (dmem_data      ),
-                    .io_imem_w_en   (imem_w_en      ),
-                    .io_dmem_w_en   (dmem_w_en      ),
-                    .io_pito_program(pito_program   )
+                    .clk              (clk            ),
+                    .rst_n            (rst_n          ),
+                    .pito_imem_addr   (imem_addr      ),
+                    .pito_imem_data   (imem_data      ),
+                    .pito_dmem_addr   (dmem_addr      ),
+                    .pito_dmem_data   (dmem_data      ),
+                    .pito_imem_w_en   (imem_w_en      ),
+                    .pito_dmem_w_en   (dmem_w_en      ),
+                    .pito_pito_program(pito_program   ),
+                    .mvu_wrc_en       (mvu_wrc_en     ),
+                    .mvu_wrc_grnt     (mvu_wrc_grnt   ),
+                    .mvu_wrc_addr     (mvu_wrc_addr   ),
+                    .mvu_wrc_word     (mvu_wrc_word   ),
+                    .mvu_wrw_addr     (mvu_wrw_addr   ),
+                    .mvu_wrw_word     (mvu_wrw_word   ),
+                    .mvu_wrw_en       (mvu_wrw_en     )
                 );
 
     task write_to_dram(rv32_data_q instr_q);
@@ -290,14 +313,52 @@ module accel_tester ();
         logger.print($sformatf("Exception signal was received code name: %s", accelerator.pito_rv32_core.rv32_wf_opcode.name));
     endtask
 
-    // task automatic monitor_regs();
-    //     Logger reg_logger = new("reg_logs.log", 1, 0);
-    //     @(posedge clk);
-    //     while(1) begin
-    //         reg_logger.print($sformatf("\n%s\n", reg_file_to_str(read_regs())));
-    //         @(posedge clk);
-    //     end
-    // endtask
+
+// =================================================================================================
+// MVU Utility Tasks
+
+    task writeData(unsigned[BDBANKW-1 : 0] word, unsigned[BDBANKA-1 : 0] addr);
+        mvu_wrc_addr = addr;
+        mvu_wrc_word = word;
+        mvu_wrc_en = 1;
+        #(20ns);
+        mvu_wrc_en = 0;
+    endtask
+
+    task writeDataRepeat(logic unsigned[BDBANKW-1 : 0] word, logic unsigned[BDBANKA-1 : 0] startaddr, int size, int stride=1);
+
+        for (int i = 0; i < size; i++) begin
+            writeData(word, startaddr);
+            startaddr = startaddr + stride;
+        end
+    endtask
+
+    task writeWeights(unsigned[BWBANKW-1 : 0] word, unsigned[BWBANKA-1 : 0] addr);
+        mvu_wrw_addr = addr;
+        mvu_wrw_word = word;
+        mvu_wrw_en = 1;
+        #(20ns);
+        mvu_wrw_en = 0;
+    endtask
+
+    task writeWeightsRepeat(logic unsigned[BWBANKW-1 : 0] word, logic unsigned[BWBANKA-1 : 0] startaddr, int size, int stride=1);
+        for (int i = 0; i < size; i++) begin
+            writeWeights(word, startaddr);
+            #(20ns);
+            startaddr = startaddr + stride;
+        end
+    endtask
+
+    task program_mvu();
+        // TEST 3
+        // Expected result: accumulators get to value h480, output to data memory is b10 for each element
+        // (i.e. [hffffffffffffffff, 0000000000000000, hffffffffffffffff, 0000000000000000, ...)
+        // (i.e. d3*d3*d64*d2 = d1152 = h480)
+        logger.print_banner($sformatf("Programming MVU RAMs"));
+        logger.print($sformatf("matrix-vector mult: 2x2 x 2 tiles, 2x2 => 2 bit precision, , input=all 1's"));
+        writeDataRepeat('hffffffffffffffff, 'h0000, 4);
+        writeWeightsRepeat({BWBANKW{1'b1}}, 'h0, 8);
+    endtask
 
     initial begin
         rv32_data_q instr_q;
@@ -331,6 +392,9 @@ module accel_tester ();
         rst_n     = 1'b1;
         @(posedge clk);
         // print_imem_region(0, 511);
+        @(posedge clk);
+        program_mvu();
+        @(posedge clk);
         fork
             monitor_pito(instr_q, hart_ids_q);
             // monitor_regs();
