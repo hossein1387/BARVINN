@@ -1,3 +1,15 @@
+# See LICENSE for license details.
+
+#*****************************************************************************
+# mvu_csr.S
+#-----------------------------------------------------------------------------
+#
+# Test csr instruction.
+#
+
+#include "pito_def.h"
+
+  
 #include "pito_def.h"
 
 csrr t1, mstatus
@@ -26,5 +38,120 @@ csrwi mvu_olength_0 ,  1
 csrwi mvu_olength_1 ,  0 
 csrwi mvu_olength_2 ,  0 
 csrwi mvu_countdown , 16        // Kick start MVU, 2 tiles x 2 tiles x 2bit x 2bits
-ebreak
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
 
+ebreak
