@@ -118,6 +118,9 @@ module accel_tester();
     function rv32_csrfile_t read_csrs(int hart_id);
         rv32_csrfile_t csrs;
         pito_pkg::csr_t csr_addr;
+        if (hart_id != 0) begin
+            logger.print($sformatf("Only hart 0 is supported, returning csrs for hart 0"));
+        end
         for (int csr=0; csr<`NUM_CSR; csr++) begin
             csr_addr = pito_pkg::csr_t'(csr);
             case (csr_addr)
@@ -133,15 +136,10 @@ module accel_tester();
                 pito_pkg::CSR_MCAUSE         : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.mcause_q;
                 pito_pkg::CSR_MTVAL          : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.mtval_q;
                 pito_pkg::CSR_MIP            : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.mip_q;
-                pito_pkg::CSR_MCYCLE         : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.mcycle_q[31:0];
+                // pito_pkg::CSR_MCYCLE         : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.mcycle_q[31:0];
                 pito_pkg::CSR_MINSTRET       : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.minstret_q[31:0];
-                pito_pkg::CSR_MCYCLEH        : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.mcycle_q[63:32];
+                // pito_pkg::CSR_MCYCLEH        : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.mcycle_q[63:32];
                 pito_pkg::CSR_MINSTRETH      : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.minstret_q[63:32];
-                pito_pkg::CSR_MVU_MUL_MODE   : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.csr_mvu_mul_mode_q;
-                pito_pkg::CSR_MVU_COUNTDOWN  : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.csr_mvu_countdown_q;
-                pito_pkg::CSR_MVU_WPRECISION : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.csr_mvu_wprecision_q;
-                pito_pkg::CSR_MVU_IPRECISION : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.csr_mvu_iprecision_q;
-                pito_pkg::CSR_MVU_OPRECISION : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.csr_mvu_oprecision_q;
                 pito_pkg::CSR_MVU_WBASEADDR  : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.csr_mvu_wbaseaddr_q;
                 pito_pkg::CSR_MVU_IBASEADDR  : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.csr_mvu_ibaseaddr_q;
                 pito_pkg::CSR_MVU_OBASEADDR  : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.csr_mvu_obaseaddr_q;
@@ -163,12 +161,15 @@ module accel_tester();
                 pito_pkg::CSR_MVU_OLENGTH_0  : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.csr_mvu_olength_0_q;
                 pito_pkg::CSR_MVU_OLENGTH_1  : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.csr_mvu_olength_1_q;
                 pito_pkg::CSR_MVU_OLENGTH_2  : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.csr_mvu_olength_2_q;
+                pito_pkg::CSR_MVU_PRECISION  : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.csr_mvu_precision_q;
+                pito_pkg::CSR_MVU_STATUS     : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.csr_mvu_status_q;
+                pito_pkg::CSR_MVU_COMMAND    : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.csr_mvu_command_q;
+                pito_pkg::CSR_MVU_QUANT      : csrs[csr] = accelerator.pito_rv32_core.csr.genblk1[0].csrfile.csr_mvu_quant_q;
                 default : csrs[csr] = 0;
             endcase
         end
         return csrs;
     endfunction 
-
 
 // TODO: A dirty hack for access values within DUT. A better way is to 
 // bind or use interface to correctly access the signals. For memory,

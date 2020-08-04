@@ -13,6 +13,8 @@
 ../../../MVU/verilog/vvp.v
 ../../../MVU/verilog/interconn.v
 ../../../MVU/verilog/quantser.v
+../../../MVU/verilog/quantser_ctrl.v
+../../../MVU/verilog/outagu.v
 ../../../MVU/verilog/inagu.v
 ../../../MVU/verilog/agu.v
 ../../../MVU/verilog/zigzagu.v
