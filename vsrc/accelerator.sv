@@ -17,28 +17,35 @@ module accelerator #(
     parameter  BLENGTH  = 15,           // Bitwidth of the length ports
 
     parameter  BACC    = 32,            /* Bitwidth of Accumulators */
+    parameter  BSCALERB= 16,            /* scalar value*/
 
     // Quantizer parameters
     parameter  BQMSBIDX = $clog2(BACC),     // Bitwidth of the quantizer MSB location specifier
     parameter  BQBOUT   = $clog2(BACC)     // Bitwitdh of the quantizer 
 )(
-    input logic                      clk,
-    input logic                      rst_n,  
-    input rv32_imem_addr_t           pito_imem_addr,
-    input rv32_instr_t               pito_imem_data,
-    input rv32_dmem_addr_t           pito_dmem_addr,
-    input rv32_data_t                pito_dmem_data,
-    input logic                      pito_imem_w_en,
-    input logic                      pito_dmem_w_en,
-    input logic                      pito_pito_program,
+    input  logic                      clk,
+    input  logic                      rst_n,  
+    input  rv32_imem_addr_t           pito_imem_addr,
+    input  rv32_instr_t               pito_imem_data,
+    input  rv32_dmem_addr_t           pito_dmem_addr,
+    input  rv32_data_t                pito_dmem_data,
+    input  logic                      pito_imem_w_en,
+    input  logic                      pito_dmem_w_en,
+    input  logic                      pito_pito_program,
 
-    input logic [        NMVU-1 : 0] mvu_wrc_en  , // input  wrc_en;
-    input logic [        NMVU-1 : 0] mvu_wrc_grnt, // output wrc_grnt;
-    input logic [     BDBANKA-1 : 0] mvu_wrc_addr, // input  wrc_addr;
-    input logic [     BDBANKW-1 : 0] mvu_wrc_word, // input  wrc_word;
-    input logic [NMVU*BWBANKA-1 : 0] mvu_wrw_addr, // Weight memory: write address
-    input logic [NMVU*BWBANKW-1 : 0] mvu_wrw_word, // Weight memory: write word
-    input logic [        NMVU-1 : 0] mvu_wrw_en    // Weight memory: write enable
+    input  logic [        NMVU-1 : 0] mvu_wrc_en  , // input  wrc_en;
+    output logic [        NMVU-1 : 0] mvu_wrc_grnt, // output wrc_grnt;
+    input  logic [     BDBANKA-1 : 0] mvu_wrc_addr, // input  wrc_addr;
+    input  logic [     BDBANKW-1 : 0] mvu_wrc_word, // input  wrc_word;
+    input  logic [NMVU*BWBANKA-1 : 0] mvu_wrw_addr, // Weight memory: write address
+    input  logic [NMVU*BWBANKW-1 : 0] mvu_wrw_word, // Weight memory: write word
+    input  logic [        NMVU-1 : 0] mvu_wrw_en,   // Weight memory: write enable
+    output logic [        NMVU-1 : 0] mvu_irq_tap,
+
+    input  logic [        NMVU-1  : 0] mvu_rdc_en  ,// input  rdc_en;
+    output logic [        NMVU-1  : 0] mvu_rdc_grnt,// output rdc_grnt;
+    input  logic [NMVU*BDBANKA-1  : 0] mvu_rdc_addr,// input  rdc_addr;
+    output logic [NMVU*BDBANKW-1  : 0] mvu_rdc_word // output rdc_word;
 
 );
 
@@ -50,43 +57,50 @@ module accelerator #(
     logic                       mvu_ic_clr      ; // input  ic_clr;
     logic [  NMVU*BMVUA-1  : 0] mvu_ic_recv_from; // input  ic_recv_from;
     logic [      2*NMVU-1  : 0] mvu_mul_mode    ; // input  mul_mode;
+    logic [         NMVU-1 : 0] mvu_d_signed    ;
+    logic [         NMVU-1 : 0] mvu_w_signed    ;
+    logic [         NMVU-1 : 0] mvu_shacc_clr   ;
     logic [        NMVU-1  : 0] mvu_max_en      ; // input  max_en;
     logic [        NMVU-1  : 0] mvu_max_clr     ; // input  max_clr;
     logic [        NMVU-1  : 0] mvu_max_pool    ; // input  max_pool;
-    logic [        NMVU-1  : 0] mvu_rdc_en      ; // input  rdc_en;
-    logic [        NMVU-1  : 0] mvu_rdc_grnt    ; // output rdc_grnt;
-    logic [NMVU*BDBANKA-1  : 0] mvu_rdc_addr    ; // input  rdc_addr;
-    logic [NMVU*BDBANKW-1  : 0] mvu_rdc_word    ; // output rdc_word;
     logic [ NMVU*BBWADDR-1 : 0] mvu_wbaseaddr   ; // Config: weight memory base address
     logic [ NMVU*BBDADDR-1 : 0] mvu_ibaseaddr   ; // Config: data memory base address for input
     logic [ NMVU*BBDADDR-1 : 0] mvu_obaseaddr   ; // Config: data memory base address for output
     logic [ NMVU*BSTRIDE-1 : 0] mvu_wstride_0   ; // Config: weight stride in dimension 0 (x)
     logic [ NMVU*BSTRIDE-1 : 0] mvu_wstride_1   ; // Config: weight stride in dimension 1 (y)
     logic [ NMVU*BSTRIDE-1 : 0] mvu_wstride_2   ; // Config: weight stride in dimension 2 (z)
+    logic [ NMVU*BSTRIDE-1 : 0] mvu_wstride_3   ; // Config: weight stride in dimension 3 (z)
     logic [ NMVU*BSTRIDE-1 : 0] mvu_istride_0   ; // Config: input stride in dimension 0 (x)
     logic [ NMVU*BSTRIDE-1 : 0] mvu_istride_1   ; // Config: input stride in dimension 1 (y)
     logic [ NMVU*BSTRIDE-1 : 0] mvu_istride_2   ; // Config: input stride in dimension 2 (z)
+    logic [ NMVU*BSTRIDE-1 : 0] mvu_istride_3   ; // Config: input stride in dimension 3 (z)
     logic [ NMVU*BSTRIDE-1 : 0] mvu_ostride_0   ; // Config: output stride in dimension 0 (x)
     logic [ NMVU*BSTRIDE-1 : 0] mvu_ostride_1   ; // Config: output stride in dimension 1 (y)
     logic [ NMVU*BSTRIDE-1 : 0] mvu_ostride_2   ; // Config: output stride in dimension 2 (z)
+    logic [ NMVU*BSTRIDE-1 : 0] mvu_ostride_3   ; // Config: output stride in dimension 3 (z)
     logic [ NMVU*BLENGTH-1 : 0] mvu_wlength_0   ; // Config: weight length in dimension 0 (x)
     logic [ NMVU*BLENGTH-1 : 0] mvu_wlength_1   ; // Config: weight length in dimension 1 (y)
     logic [ NMVU*BLENGTH-1 : 0] mvu_wlength_2   ; // Config: weight length in dimension 2 (z)
+    logic [ NMVU*BLENGTH-1 : 0] mvu_wlength_3   ; // Config: weight length in dimension 3 (z)
     logic [ NMVU*BLENGTH-1 : 0] mvu_ilength_0   ; // Config: input length in dimension 0 (x)
     logic [ NMVU*BLENGTH-1 : 0] mvu_ilength_1   ; // Config: input length in dimension 1 (y)
     logic [ NMVU*BLENGTH-1 : 0] mvu_ilength_2   ; // Config: input length in dimension 2 (z)
+    logic [ NMVU*BLENGTH-1 : 0] mvu_ilength_3   ; // Config: input length in dimension 3 (z)
     logic [ NMVU*BLENGTH-1 : 0] mvu_olength_0   ; // Config: output length in dimension 0 (x)
     logic [ NMVU*BLENGTH-1 : 0] mvu_olength_1   ; // Config: output length in dimension 1 (y)
     logic [ NMVU*BLENGTH-1 : 0] mvu_olength_2   ; // Config: output length in dimension 2 (z)
+    logic [ NMVU*BLENGTH-1 : 0] mvu_olength_3   ; // Config: output length in dimension 3 (z)
     logic [         NMVU-1 : 0] mvu_quant_clr   ; // Quantizer: clear
     logic [NMVU*BQMSBIDX-1 : 0] mvu_quant_msbidx; // Quantizer: bit position index of the MSB
     logic [ NMVU*BCNTDWN-1 : 0] mvu_countdown   ; // Config: number of clocks to countdown for given task
     logic [   NMVU*BPREC-1 : 0] mvu_wprecision  ; // Config: weight precision
     logic [   NMVU*BPREC-1 : 0] mvu_iprecision  ; // Config: input precision
     logic [   NMVU*BPREC-1 : 0] mvu_oprecision  ; // Config: output precision
-
-    logic [         NMVU-1 : 0] mvu_w_signed    ; // MVU weight is signed
     logic [         NMVU-1 : 0] mvu_i_signed    ; // MVU input is signed
+    // logic [   NMVU*BPREC-1 : 0] mvu_iprecision  ; // Config: input precision
+    // logic [   NMVU*BPREC-1 : 0] mvu_oprecision  ; // Config: output precision
+
+    logic [NMVU*BSCALERB-1 : 0] mvu_scaler_b  ; // MVU scaler factor
 
     logic [       32*NMVU-1: 0] csr_mvu_wbaseaddr;
     logic [       32*NMVU-1: 0] csr_mvu_ibaseaddr;
@@ -113,23 +127,26 @@ module accelerator #(
     logic [       32*NMVU-1: 0] csr_mvu_status   ;
     logic [       32*NMVU-1: 0] csr_mvu_command  ;
     logic [       32*NMVU-1: 0] csr_mvu_quant    ;
-
+    logic [       32*NMVU-1: 0] csr_mvu_wstride_3;
+    logic [       32*NMVU-1: 0] csr_mvu_istride_3;
+    logic [       32*NMVU-1: 0] csr_mvu_ostride_3;
+    logic [       32*NMVU-1: 0] csr_mvu_wlength_3;
+    logic [       32*NMVU-1: 0] csr_mvu_ilength_3;
+    logic [       32*NMVU-1: 0] csr_mvu_olength_3;
     assign mvu_clk   = clk;
     assign mvu_rst_n = rst_n;
 
-    assign mvu_ic_clr        = 0;
+    assign mvu_ic_clr        = ~rst_n;
     assign mvu_ic_recv_from  = 0;
     assign mvu_max_clr       = 0;
     assign mvu_max_pool      = 0;
     assign mvu_quant_clr     = 0;
-    assign mvu_wrw_addr      = 0;
-    assign mvu_wrw_word      = 0;
-    assign mvu_wrw_en        = 0;
-    assign mvu_rdc_en        = 0;
-    assign mvu_rdc_addr      = 0;
-    assign mvu_wrc_en        = 0;
-    assign mvu_wrc_addr      = 0;
-    assign mvu_wrc_word      = 0;
+    // assign mvu_wrw_addr      = 0;
+    // assign mvu_wrw_word      = 0;
+    // assign mvu_wrw_en        = 0;
+    // assign mvu_wrc_en        = 0;
+    // assign mvu_wrc_addr      = 0;
+    // assign mvu_wrc_word      = 0;
 
 genvar mvu_cnt;
 generate 
@@ -140,35 +157,46 @@ generate
         assign mvu_wstride_0[mvu_cnt*BSTRIDE +: BSTRIDE]     = csr_mvu_wstride_0[mvu_cnt*32 +: BSTRIDE];
         assign mvu_wstride_1[mvu_cnt*BSTRIDE +: BSTRIDE]     = csr_mvu_wstride_1[mvu_cnt*32 +: BSTRIDE];
         assign mvu_wstride_2[mvu_cnt*BSTRIDE +: BSTRIDE]     = csr_mvu_wstride_2[mvu_cnt*32 +: BSTRIDE];
+        assign mvu_wstride_3[mvu_cnt*BSTRIDE +: BSTRIDE]     = csr_mvu_wstride_3[mvu_cnt*32 +: BSTRIDE];
         assign mvu_istride_0[mvu_cnt*BSTRIDE +: BSTRIDE]     = csr_mvu_istride_0[mvu_cnt*32 +: BSTRIDE];
         assign mvu_istride_1[mvu_cnt*BSTRIDE +: BSTRIDE]     = csr_mvu_istride_1[mvu_cnt*32 +: BSTRIDE];
         assign mvu_istride_2[mvu_cnt*BSTRIDE +: BSTRIDE]     = csr_mvu_istride_2[mvu_cnt*32 +: BSTRIDE];
+        assign mvu_istride_3[mvu_cnt*BSTRIDE +: BSTRIDE]     = csr_mvu_istride_3[mvu_cnt*32 +: BSTRIDE];
         assign mvu_ostride_0[mvu_cnt*BSTRIDE +: BSTRIDE]     = csr_mvu_ostride_0[mvu_cnt*32 +: BSTRIDE];
         assign mvu_ostride_1[mvu_cnt*BSTRIDE +: BSTRIDE]     = csr_mvu_ostride_1[mvu_cnt*32 +: BSTRIDE];
         assign mvu_ostride_2[mvu_cnt*BSTRIDE +: BSTRIDE]     = csr_mvu_ostride_2[mvu_cnt*32 +: BSTRIDE];
+        assign mvu_ostride_3[mvu_cnt*BSTRIDE +: BSTRIDE]     = csr_mvu_ostride_3[mvu_cnt*32 +: BSTRIDE];
         assign mvu_wlength_0[mvu_cnt*BLENGTH +: BLENGTH]     = csr_mvu_wlength_0[mvu_cnt*32 +: BLENGTH];
         assign mvu_wlength_1[mvu_cnt*BLENGTH +: BLENGTH]     = csr_mvu_wlength_1[mvu_cnt*32 +: BLENGTH];
         assign mvu_wlength_2[mvu_cnt*BLENGTH +: BLENGTH]     = csr_mvu_wlength_2[mvu_cnt*32 +: BLENGTH];
+        assign mvu_wlength_3[mvu_cnt*BSTRIDE +: BSTRIDE]     = csr_mvu_wlength_3[mvu_cnt*32 +: BSTRIDE];
         assign mvu_ilength_0[mvu_cnt*BLENGTH +: BLENGTH]     = csr_mvu_ilength_0[mvu_cnt*32 +: BLENGTH];
         assign mvu_ilength_1[mvu_cnt*BLENGTH +: BLENGTH]     = csr_mvu_ilength_1[mvu_cnt*32 +: BLENGTH];
         assign mvu_ilength_2[mvu_cnt*BLENGTH +: BLENGTH]     = csr_mvu_ilength_2[mvu_cnt*32 +: BLENGTH];
+        assign mvu_ilength_3[mvu_cnt*BSTRIDE +: BSTRIDE]     = csr_mvu_ilength_3[mvu_cnt*32 +: BSTRIDE];
         assign mvu_olength_0[mvu_cnt*BLENGTH +: BLENGTH]     = csr_mvu_olength_0[mvu_cnt*32 +: BLENGTH];
         assign mvu_olength_1[mvu_cnt*BLENGTH +: BLENGTH]     = csr_mvu_olength_1[mvu_cnt*32 +: BLENGTH];
         assign mvu_olength_2[mvu_cnt*BLENGTH +: BLENGTH]     = csr_mvu_olength_2[mvu_cnt*32 +: BLENGTH];
+        assign mvu_olength_3[mvu_cnt*BSTRIDE +: BSTRIDE]     = csr_mvu_olength_3[mvu_cnt*32 +: BSTRIDE];
         assign mvu_wprecision[mvu_cnt*BPREC +: BPREC]        = csr_mvu_precision[mvu_cnt*32 +: BPREC];
         assign mvu_iprecision[mvu_cnt*BPREC +: BPREC]        = csr_mvu_precision[(mvu_cnt*32+BPREC) +: BPREC];
         assign mvu_oprecision[mvu_cnt*BPREC +: BPREC]        = csr_mvu_precision[(mvu_cnt*32+2*BPREC) +: BPREC];
         assign mvu_w_signed[mvu_cnt]                         = csr_mvu_precision[mvu_cnt*32 + 24];
         assign mvu_i_signed[mvu_cnt]                         = csr_mvu_precision[mvu_cnt*32 + 25];
+        assign mvu_d_signed[mvu_cnt]                         = csr_mvu_precision[mvu_cnt*32 + 25];
+        assign mvu_shacc_clr[mvu_cnt]                        = ~rst_n;
         // assign mvu_status  = {31{1'b0}, mvu_status}       ;
         assign mvu_mul_mode[mvu_cnt*2 +: 2]                  = csr_mvu_command[(mvu_cnt*32 + 30) +: 2];
         assign mvu_max_en[mvu_cnt]                           = csr_mvu_command[mvu_cnt*32 + 29];
         assign mvu_countdown[mvu_cnt*BCNTDWN +: BCNTDWN]     = csr_mvu_command[ mvu_cnt*32 +: BCNTDWN];
-        assign mvu_quant_msbidx[mvu_cnt*BQMSBIDX +: BQMSBIDX]= csr_mvu_quant[(mvu_cnt*32+BQMSBIDX) +: BQMSBIDX];
+        assign mvu_quant_msbidx[mvu_cnt*BQMSBIDX +: BQMSBIDX]= csr_mvu_quant[(mvu_cnt*32) +: BQMSBIDX];
+
    end
 endgenerate
 
 
+    // assign mvu_scaler_clr = ~rst_n;
+    assign mvu_scaler_b  = 'h1;
 
     mvutop #(
             .NMVU  (NMVU  ),
@@ -184,6 +212,9 @@ endgenerate
             .ic_clr           (mvu_ic_clr       ),
             .ic_recv_from     (mvu_ic_recv_from ),
             .mul_mode         (mvu_mul_mode     ), // connected
+            .d_signed         (mvu_d_signed     ),
+            .w_signed         (mvu_w_signed     ),
+            .shacc_clr        (mvu_shacc_clr    ),
             .max_en           (mvu_max_en       ),
             .max_clr          (mvu_max_clr      ),
             .max_pool         (mvu_max_pool     ),
@@ -199,21 +230,28 @@ endgenerate
             .wstride_0        (mvu_wstride_0    ), // connected
             .wstride_1        (mvu_wstride_1    ), // connected
             .wstride_2        (mvu_wstride_2    ), // connected
+            .wstride_3        (mvu_wstride_3    ),
             .istride_0        (mvu_istride_0    ), // connected
             .istride_1        (mvu_istride_1    ), // connected
             .istride_2        (mvu_istride_2    ), // connected
+            .istride_3        (mvu_istride_3    ),
             .ostride_0        (mvu_ostride_0    ), // connected
             .ostride_1        (mvu_ostride_1    ), // connected
             .ostride_2        (mvu_ostride_2    ), // connected
+            .ostride_3        (mvu_ostride_3    ),
             .wlength_0        (mvu_wlength_0    ), // connected
             .wlength_1        (mvu_wlength_1    ), // connected
             .wlength_2        (mvu_wlength_2    ), // connected
+            .wlength_3        (mvu_wlength_3    ), // connected
             .ilength_0        (mvu_ilength_0    ), // connected
             .ilength_1        (mvu_ilength_1    ), // connected
             .ilength_2        (mvu_ilength_2    ), // connected
+            .ilength_3        (mvu_ilength_3    ), // connected
             .olength_0        (mvu_olength_0    ), // connected
             .olength_1        (mvu_olength_1    ), // connected
             .olength_2        (mvu_olength_2    ), // connected
+            .olength_3        (mvu_olength_3    ), // connected
+            .scaler_b         (mvu_scaler_b     ),
             .wrw_addr         (mvu_wrw_addr     ),
             .wrw_word         (mvu_wrw_word     ),
             .wrw_en           (mvu_wrw_en       ),
@@ -226,24 +264,24 @@ endgenerate
             .wrc_addr         (mvu_wrc_addr     ),
             .wrc_word         (mvu_wrc_word     )
         );
-
     logic pito_clk;
     logic pito_rst_n;
 
     assign pito_clk   = clk;
     assign pito_rst_n = rst_n;
+    assign mvu_irq_tap = mvu_irq;
 
 rv32_core pito_rv32_core(
-    .pito_io_clk      (pito_clk         ),
-    .pito_io_rst_n    (pito_rst_n       ),
-    .pito_io_imem_addr(pito_imem_addr   ),
-    .pito_io_imem_data(pito_imem_data   ),
-    .pito_io_dmem_addr(pito_dmem_addr   ),
-    .pito_io_dmem_data(pito_dmem_data   ),
-    .pito_io_imem_w_en(pito_imem_w_en   ),
-    .pito_io_dmem_w_en(pito_dmem_w_en   ),
-    .pito_io_program  (pito_pito_program),
-    .mvu_irq_i        (mvu_irq          ),
+    .pito_io_clk      (pito_clk             ),
+    .pito_io_rst_n    (pito_rst_n           ),
+    .pito_io_imem_addr(pito_imem_addr       ),
+    .pito_io_imem_data(pito_imem_data       ),
+    .pito_io_dmem_addr(pito_dmem_addr       ),
+    .pito_io_dmem_data(pito_dmem_data       ),
+    .pito_io_imem_w_en(pito_imem_w_en       ),
+    .pito_io_dmem_w_en(pito_dmem_w_en       ),
+    .pito_io_program  (pito_pito_program    ),
+    .mvu_irq_i        (mvu_irq              ),
     .csr_mvu_wbaseaddr(csr_mvu_wbaseaddr    ),
     .csr_mvu_ibaseaddr(csr_mvu_ibaseaddr    ),
     .csr_mvu_obaseaddr(csr_mvu_obaseaddr    ),
@@ -266,10 +304,16 @@ rv32_core pito_rv32_core(
     .csr_mvu_olength_1(csr_mvu_olength_1    ),
     .csr_mvu_olength_2(csr_mvu_olength_2    ),
     .csr_mvu_precision(csr_mvu_precision    ),
+    .csr_mvu_wstride_3(csr_mvu_wstride_3    ),
+    .csr_mvu_istride_3(csr_mvu_istride_3    ),
+    .csr_mvu_ostride_3(csr_mvu_ostride_3    ),
+    .csr_mvu_wlength_3(csr_mvu_wlength_3    ),
+    .csr_mvu_ilength_3(csr_mvu_ilength_3    ),
+    .csr_mvu_olength_3(csr_mvu_olength_3    ),
     .csr_mvu_status   (csr_mvu_status       ),
     .csr_mvu_command  (csr_mvu_command      ),
     .csr_mvu_quant    (csr_mvu_quant        ),
-    .mvu_start        (mvu_start        )
+    .mvu_start        (mvu_start            )
 );
 
 always @(posedge mvu_irq[0]) begin

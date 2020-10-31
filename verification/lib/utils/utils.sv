@@ -18,6 +18,7 @@ typedef enum {
     VERB_DEBUG  = 500
 } print_verbosity_t;
 
+typedef int data_q_t[$];
 
 //==================================================================================================
 // Logger class, logs test string to a file
@@ -133,5 +134,23 @@ function void print_matrix_from_array(inout integer array, integer row_len, inte
         array_shape_str = "";
     end
 endfunction : print_matrix_from_array
+
+//==================================================================================================
+// Given a text file with data written into each line, this function returns a queue with all elements
+// in it.
+function automatic data_q_t datafile_to_q(string __file, Logger logger);
+    int fd = $fopen (__file, "r");
+    string data_str, temp, line;
+    data_q_t data_q;
+    if (fd)  begin logger.print($sformatf("%s was opened successfully : %0d", __file, fd)); end
+    else     begin logger.print($sformatf("%s was NOT opened successfully : %0d", __file, fd)); $finish(); end
+    while (!$feof(fd)) begin
+        temp = $fgets(line, fd);
+        if (line.substr(0, 1) != "//") begin
+            data_q.push_back(line.atoi());
+        end
+    end
+    return data_q;
+endfunction
 
 endpackage : utils
