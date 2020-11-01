@@ -22,12 +22,7 @@ module conv_tester();
     rv32_utils::RV32IPredictor rv32i_pred;
     string program_hex_file = "test.hex";
     string sim_log_file     = "accel_tester.log";
-    logic[WEIGHT_PRECISION-1:0] mvu_word_unpacked[MVU_WORD_SIZE_W_PREC];
-    logic[INPUT_PRECISION-1:0]  input_unpacked[INPUT_WORD_SIZE_W_PREC];
     logic [BWBANKA-1 : 0] mvu_addr;
-    logic[BWBANKW-1 : 0] mvu_word_packed;
-    logic[BDBANKW-1 : 0] input_word_packed;
-    int element_cnt = 0, element_width_cnt=0, bank_cnt=0;
 
 //==================================================================================================
 // DUT Signals
@@ -373,42 +368,38 @@ module conv_tester();
 
     task automatic writeWeightMat(int width, int height, string file, logic unsigned[BWBANKA-1 : 0] startaddr, int MVU_MAT_SIZE=4096);
         data_q_t weight_q;
+        logic[WEIGHT_PRECISION-1:0] weight_unpacked[BWBANKW];
+        logic[BWBANKW*WEIGHT_PRECISION-1 : 0] weight_word_packed;
+        logic mvu_weight_word_unpacked[BWBANKW-1:0];
+        logic[BWBANKW-1:0] mvu_weight_word;
         weight_q = datafile_to_q(file, logger);
-        assert(width*height==weight_q.size()) else begin
-            logger.print($sformatf("Number of elements in weight_q %d is not matching requested matrix size (%0dx%0d). Abort sim.", weight_q.size(), width, height), "ERROR");
-            $finish();
-        end
-        assert(width*height*WEIGHT_PRECISION==MVU_MAT_SIZE) else begin
-            logger.print($sformatf("Requested matrix cannot fit into MVU. (avail: %d bits, req: %d) Abort sim.", MVU_MAT_SIZE, width*height*WEIGHT_PRECISION), "ERROR");
-            $finish();
-        end
-        assert(BWBANKW%WEIGHT_PRECISION==0) else begin
-            logger.print($sformatf("MVU word size (%0d) must be divisible by weight precision (%0d)", BWBANKW,WEIGHT_PRECISION), "ERROR");
-            $finish();
-        end
-        element_cnt = 0;
-        element_width_cnt = 0;
         for (int i=0; i<width*height; i++) begin
-            mvu_word_unpacked[element_cnt] = weight_q[i];
-            // logger.print($sformatf("mvu.weight[%0d]=%0d ", element_cnt, weight_q[i]));
-            logger.print($sformatf("mvu_word_unpacked[%0d]: %b", i, mvu_word_unpacked[element_cnt]));
-            element_cnt = element_cnt + 1;
-            element_width_cnt = element_width_cnt + WEIGHT_PRECISION;
-            if (element_width_cnt>=BWBANKW)begin
-                element_width_cnt = 0;
-                element_cnt = 0;
-                mvu_word_packed = {>>{mvu_word_unpacked}}; // pack words of WEIGHT_PRECISION bits into mvu word
-                writeWeights(mvu_word_packed, startaddr);
-                startaddr = startaddr + 1;
-                logger.print($sformatf("Writing to bank %0d ", bank_cnt));
-                logger.print($sformatf("data: %b ", mvu_word_packed));
-                bank_cnt += 1;
+            weight_unpacked[i] = weight_q[i];
+            $display($sformatf("weight_unpacked[%2d]: %b", i, weight_unpacked[i]));
+        end
+
+        weight_word_packed = {<<{weight_unpacked}};
+        // Now transpose the word so that the MSB of all words is wrtten first
+        $display("%b", weight_word_packed);
+        for (int i=0; i<WEIGHT_PRECISION; i++) begin
+            for (int j=0; j<BWBANKW; j++) begin
+                mvu_weight_word[j] = weight_word_packed[i+j*WEIGHT_PRECISION];
             end
+            // Reverse bits in the word of the packed data
+            {<<{mvu_weight_word_unpacked}} = mvu_weight_word;
+            mvu_weight_word = {>>{mvu_weight_word_unpacked}};
+            $display("%b",mvu_weight_word);
+            writeWeights(mvu_weight_word, startaddr);
+            startaddr = startaddr + 1;
         end
     endtask
 
     task automatic writeInputVec(int width, string file, logic unsigned[BDBANKA-1 : 0] startaddr, int INPUT_VEC_SIZE=4096);
         data_q_t input_q;
+        logic[INPUT_PRECISION-1:0]  input_unpacked[BDBANKW];
+        logic[BDBANKW*INPUT_PRECISION-1 : 0] input_word_packed;
+        logic mvu_data_word_unpacked[BDBANKW-1:0];
+        logic[BDBANKW-1:0] mvu_data_word;
         input_q = datafile_to_q(file, logger);
         assert(width==input_q.size()) else begin
             logger.print($sformatf("Number of elements in %d is not matching requested vector size (%0d). Abort sim.", input_q.size(), width), "ERROR");
@@ -422,23 +413,24 @@ module conv_tester();
             logger.print($sformatf("INPUT word size (%0d) must be divisible by input precision (%0d)", BDBANKW, INPUT_PRECISION), "ERROR");
             $finish();
         end
-        element_cnt = 0;
-        element_width_cnt = 0;
         for (int i=0; i<width; i++) begin
-            input_unpacked[element_cnt] = input_q[i];
-            logger.print($sformatf("input_unpacked[%0d]: %b", i, input_unpacked[element_cnt]));
-            element_cnt = element_cnt + 1;
-            element_width_cnt = element_width_cnt + INPUT_PRECISION;
-            if (element_width_cnt>=BDBANKW)begin
-                element_width_cnt = 0;
-                element_cnt = 0;
-                input_word_packed = {>>{input_unpacked}}; // pack words of INPUT_PRECISION bits into mvu word
-                writeData(input_word_packed, startaddr);
-                startaddr = startaddr + 1;
-                logger.print($sformatf("Writing to bank %0d ", bank_cnt));
-                logger.print($sformatf("data: %b ", input_word_packed));
-                bank_cnt += 1;
+            input_unpacked[i] = input_q[i];
+            $display($sformatf("input_unpacked[%2d]: %b", i, input_unpacked[i]));
+        end
+
+        input_word_packed = {<<{input_unpacked}};
+        // Now transpose the word so that the MSB of all words is wrtten first
+        $display("%b", input_word_packed);
+        for (int i=0; i<INPUT_PRECISION; i++) begin
+            for (int j=0; j<BDBANKW; j++) begin
+                mvu_data_word[j] = input_word_packed[i+j*INPUT_PRECISION];
             end
+            // Reverse bits in the word of the packed data
+            {<<{mvu_data_word_unpacked}} = mvu_data_word;
+            mvu_data_word = {>>{mvu_data_word_unpacked}};
+            // $display("%b",mvu_data_word);
+            writeData(mvu_data_word, startaddr);
+            startaddr = startaddr + 1;
         end
     endtask
 
@@ -486,6 +478,7 @@ module conv_tester();
         end
         @(posedge clk);
         mvu_rdc_en = 0;
+
 
         $finish();
     endtask
