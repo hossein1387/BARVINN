@@ -379,7 +379,7 @@ module conv_tester();
         end
 
         weight_word_packed = {<<{weight_unpacked}};
-        // Now transpose the word so that the MSB of all words is wrtten first
+        // Now transpose the word so that the MSB of every word is wrtten first
         $display("%b", weight_word_packed);
         for (int i=0; i<WEIGHT_PRECISION; i++) begin
             for (int j=0; j<BWBANKW; j++) begin
@@ -419,7 +419,7 @@ module conv_tester();
         end
 
         input_word_packed = {<<{input_unpacked}};
-        // Now transpose the word so that the MSB of all words is wrtten first
+        // Now transpose the word so that the MSB of every word is wrtten first
         $display("%b", input_word_packed);
         for (int i=0; i<INPUT_PRECISION; i++) begin
             for (int j=0; j<BDBANKW; j++) begin
