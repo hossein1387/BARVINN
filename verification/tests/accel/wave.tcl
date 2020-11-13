@@ -71,7 +71,6 @@ add_wave_group core
         add_wave -into EXStage {{/accel_tester/accelerator/pito_rv32_core/rv32_ex_pc}}
         add_wave -into EXStage {{/accel_tester/accelerator/pito_rv32_core/rv32_ex_imm}}
         add_wave -into EXStage {{/accel_tester/accelerator/pito_rv32_core/rv32_ex_readd_addr}}
-
     add_wave_group -into core WBStage
         add_wave -into WBStage {{/accel_tester/accelerator/pito_rv32_core/rv32_wb_opcode}}
         add_wave -into WBStage {{/accel_tester/accelerator/pito_rv32_core/rv32_wb_rd}}
@@ -155,8 +154,6 @@ add_wave_group pipeline
             add_wave -into hart_ids {{/accel_tester/accelerator/pito_rv32_core/rv32_hart_ex_cnt}}
             add_wave -into hart_ids {{/accel_tester/accelerator/pito_rv32_core/rv32_hart_wb_cnt}}
             add_wave -into hart_ids {{/accel_tester/accelerator/pito_rv32_core/rv32_hart_wf_cnt}}
-
-
 add_wave_group csr
     add_wave_group -into csr csr0
             add_wave -into csr0  {{/accel_tester/accelerator/pito_rv32_core/csr/\genblk1[0].csrfile /mvu_irq_i}}
@@ -190,8 +187,6 @@ add_wave_group csr
             add_wave -into csr7 {{/accel_tester/accelerator/pito_rv32_core/csr/\genblk1[7].csrfile /mvu_irq_i}}
             add_wave -into csr7 {{/accel_tester/accelerator/pito_rv32_core/csr/\genblk1[7].csrfile /mvu_start}}
             add_wave -into csr7 {{/accel_tester/accelerator/pito_rv32_core/csr/\genblk1[7].csrfile /csr_mvu_command}}
-
-
 add_wave_group mems
     add_wave_group -into mems i_mem
         add_wave -into i_mem {{/accel_tester/accelerator/pito_rv32_core/i_mem/clock}}

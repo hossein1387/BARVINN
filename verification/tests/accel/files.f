@@ -17,6 +17,7 @@
 ../../../MVU/verilog/outagu.v
 ../../../MVU/verilog/inagu.v
 ../../../MVU/verilog/agu.v
+../../../MVU/verilog/fixedpointscaler.v
 ../../../MVU/verilog/zigzagu.v
 ../../../MVU/verilog/controller.v
 ../../../MVU/verilog/shiftreg.v

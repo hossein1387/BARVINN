@@ -31,13 +31,18 @@ module accel_tester();
     logic              pito_program;
     logic [pito_pkg::HART_CNT_WIDTH-1:0] mvu_irq;
 
-    logic [        NMVU-1 : 0] mvu_wrc_en  ;  // input  wrc_en;
-    logic [        NMVU-1 : 0] mvu_wrc_grnt;  // output wrc_grnt;
-    logic [     BDBANKA-1 : 0] mvu_wrc_addr;  // input  wrc_addr;
-    logic [     BDBANKW-1 : 0] mvu_wrc_word;  // input  wrc_word;
-    logic [NMVU*BWBANKA-1 : 0] mvu_wrw_addr;  // Weight memory: write address
-    logic [NMVU*BWBANKW-1 : 0] mvu_wrw_word;  // Weight memory: write word
-    logic [        NMVU-1 : 0] mvu_wrw_en  ;  // Weight memory: write enable
+    logic [        NMVU-1  : 0] mvu_wrc_en  ; // input  wrc_en;
+    logic [        NMVU-1  : 0] mvu_wrc_grnt; // output wrc_grnt;
+    logic [     BDBANKA-1  : 0] mvu_wrc_addr; // input  wrc_addr;
+    logic [     BDBANKW-1  : 0] mvu_wrc_word; // input  wrc_word;
+    logic [NMVU*BWBANKA-1  : 0] mvu_wrw_addr; // Weight memory: write address
+    logic [NMVU*BWBANKW-1  : 0] mvu_wrw_word; // Weight memory: write word
+    logic [        NMVU-1  : 0] mvu_wrw_en  ; // Weight memory: write enable
+    logic [        NMVU-1  : 0] mvu_irq_tap ; // MVU IRQ tap signal
+    logic [        NMVU-1  : 0] mvu_rdc_en  ; // input  rdc_en;
+    logic [        NMVU-1  : 0] mvu_rdc_grnt; // output rdc_grnt;
+    logic [NMVU*BDBANKA-1  : 0] mvu_rdc_addr; // input  rdc_addr;
+    logic [NMVU*BDBANKW-1  : 0] mvu_rdc_word; // output rdc_word;
 
     accelerator accelerator(
                     .clk              (clk            ),
@@ -55,16 +60,21 @@ module accel_tester();
                     .mvu_wrc_word     (mvu_wrc_word   ),
                     .mvu_wrw_addr     (mvu_wrw_addr   ),
                     .mvu_wrw_word     (mvu_wrw_word   ),
-                    .mvu_wrw_en       (mvu_wrw_en     )
+                    .mvu_wrw_en       (mvu_wrw_en     ),
+                    .mvu_irq_tap      (mvu_irq_tap    ),
+                    .mvu_rdc_en       (mvu_rdc_en     ),
+                    .mvu_rdc_grnt     (mvu_rdc_grnt   ),
+                    .mvu_rdc_addr     (mvu_rdc_addr   ),
+                    .mvu_rdc_word     (mvu_rdc_word   )
                 );
 
-    task write_to_dram(rv32_data_q instr_q);
+    task automatic write_to_dram(rv32_data_q instr_q);
         for (int i=0; i<instr_q.size(); i++) begin
             accelerator.pito_rv32_core.d_mem.bram_32Kb_inst.inst.native_mem_module.blk_mem_gen_v8_4_3_inst.memory[i] = instr_q[i];
         end
     endtask
 
-    task write_instr_to_ram(rv32_data_q instr_q, int backdoor, int log_to_console);
+    task automatic write_instr_to_ram(rv32_data_q instr_q, int backdoor, int log_to_console);
         if(log_to_console) begin
             logger.print_banner($sformatf("Writing %6d instructions to the RAM", instr_q.size()));
             logger.print($sformatf(" ADDR  INSTRUCTION          INSTR TYPE       OPCODE          DECODING"));
@@ -322,7 +332,7 @@ module accel_tester();
         mvu_wrc_addr = addr;
         mvu_wrc_word = word;
         mvu_wrc_en = 1;
-        #(20ns);
+        @(posedge clk);
         mvu_wrc_en = 0;
     endtask
 
@@ -338,14 +348,14 @@ module accel_tester();
         mvu_wrw_addr = addr;
         mvu_wrw_word = word;
         mvu_wrw_en = 1;
-        #(20ns);
+        @(posedge clk);
         mvu_wrw_en = 0;
     endtask
 
     task writeWeightsRepeat(logic unsigned[BWBANKW-1 : 0] word, logic unsigned[BWBANKA-1 : 0] startaddr, int size, int stride=1);
         for (int i = 0; i < size; i++) begin
             writeWeights(word, startaddr);
-            #(20ns);
+            @(posedge clk);
             startaddr = startaddr + stride;
         end
     endtask
@@ -359,6 +369,62 @@ module accel_tester();
         logger.print($sformatf("matrix-vector mult: 2x2 x 2 tiles, 2x2 => 2 bit precision, , input=all 1's"));
         writeDataRepeat('hffffffffffffffff, 'h0000, 4);
         writeWeightsRepeat({BWBANKW{1'b1}}, 'h0, 8);
+    endtask
+
+    task readData(input logic [BDBANKA-1 : 0] addr, output logic [BDBANKW-1 : 0] word);
+        mvu_rdc_addr = addr;
+        mvu_rdc_en = 1;
+        @(posedge clk);
+        mvu_rdc_en = 0;
+        @(posedge clk);
+        @(posedge clk);
+        word = mvu_rdc_word;
+    endtask
+
+    task readOutputRAM(logic [NMVU*BDBANKA-1  : 0] startAddr, int size, int stride);
+        logic [NMVU*BDBANKW-1  : 0] word;
+        mvu_rdc_en = 1;
+        @(posedge clk);
+        // readData(word, OutPutaddr);
+        for (int i = 0; i < size; i++) begin
+            // readData(OutPutaddr, word);
+            startAddr = startAddr + stride;
+            mvu_rdc_en = 1;
+            @(posedge clk);
+            mvu_rdc_en = 0;
+            @(posedge clk);
+            @(posedge clk);
+            word = mvu_rdc_word;
+            $display($sformatf("[%5d]: %h", mvu_rdc_addr, word));
+            mvu_rdc_addr = startAddr;
+            // OutPutaddr = OutPutaddr + stride;
+        end
+        @(posedge clk);
+        mvu_rdc_en = 0;
+        $finish();
+    endtask
+
+    task wait_for_mvu_irq();
+        logger.print("MVU IRQ task");
+        while(1) begin
+            @(posedge mvu_irq_tap[0]);
+            logger.print("irq raised on mvu[0]");
+            #(100us);
+            readOutputRAM(0, 10*1024, 1);
+        end
+    endtask
+
+    task init_mvu();
+        @(posedge clk);
+        mvu_rdc_en = 0;
+        mvu_rdc_addr = 0;
+        mvu_wrc_en = 0;
+        mvu_wrc_addr = 0;
+        mvu_wrc_word = 0;
+        mvu_wrw_addr = 0;
+        mvu_wrw_word = 0;
+        mvu_wrw_en = 0;
+        @(posedge clk);
     endtask
 
     initial begin
@@ -387,19 +453,23 @@ module accel_tester();
         @(posedge clk);
         rst_n     = 1'b0;
         @(posedge clk);
+        init_mvu();
+        #(10us);
         write_instr_to_ram(instr_q, 1, 0);
         write_to_dram(instr_q);
         @(posedge clk);
-        rst_n     = 1'b1;
         @(posedge clk);
         // print_imem_region(0, 511);
         @(posedge clk);
         program_mvu();
         @(posedge clk);
+        rst_n     = 1'b1;
+        @(posedge clk);
         fork
             monitor_pito(instr_q, hart_ids_q);
             // monitor_regs();
-        join_any
+            wait_for_mvu_irq();
+        join
         rv32i_pred.report_result(1, hart_ids_q);
         // print_imem_region( int'(`PITO_DATA_MEM_OFFSET), int'(`PITO_DATA_MEM_OFFSET+4), "char");
         $finish();
@@ -417,7 +487,7 @@ module accel_tester();
     end
 
     initial begin
-        #1ms;
+        #100ms;
         $display("Simulation took more than expected ( more than 600ms)");
         $finish();
     end
