@@ -35,7 +35,8 @@ module data_transposer #(
 
     function void transpose_write(int pos);
         for (int i=0; i<MAX_DATA_PREC; i++) begin
-            buffer[i] = sliced_val[i]<<(NUM_WORDS-pos-1) | buffer[i];
+            // buffer[i] = sliced_val[i]<<(NUM_WORDS-pos-1) | buffer[i];
+            buffer[i] = sliced_val[i]<<(pos) | buffer[i];
         end
     endfunction
 
