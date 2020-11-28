@@ -33,6 +33,10 @@ module data_transposer #(
     typedef enum logic[5:0] {IDLE, DATA_READ, TRANSPOSE} trans_state_t;
     trans_state_t next_state;
 
+    // Data needs to be stored in MVU in tranposed and MSB first. The buffer holds data in 
+    // Transposed format, however, for writing to MVU, we need to write in MSB first format.
+    // Hence for an N precision input array , the word stored at address 0 in the buffer needs 
+    // to be written to N-1 etc.
     function void transpose_write(int pos);
         for (int i=0; i<MAX_DATA_PREC; i++) begin
             // buffer[i] = sliced_val[i]<<(NUM_WORDS-pos-1) | buffer[i];
@@ -41,7 +45,9 @@ module data_transposer #(
     endfunction
 
     assign sliced_val = {{(NUM_WORDS-MAX_DATA_PREC){1'b0}}, iword[MAX_DATA_PREC-1:0]};
-    assign mvu_wr_word= buffer[wd_cnt];
+
+    // Writing buffer into MVU with MSB first format
+    assign mvu_wr_word= buffer[prec_reg-wd_cnt-1];
 
     always_ff @(posedge clk) begin
         if(~rst_n) begin
@@ -78,7 +84,7 @@ module data_transposer #(
                     end
                 end
                 TRANSPOSE: begin
-                    if(wd_cnt >prec_reg) begin
+                    if(wd_cnt>=prec_reg-1) begin
                         wd_cnt     <= 0;
                         busy       <= 1'b0;
                         next_state <= IDLE;
