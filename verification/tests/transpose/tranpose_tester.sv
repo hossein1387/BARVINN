@@ -8,7 +8,7 @@ module transpose_tester();
     localparam CLOCK_SPEED   = 50; // 10MHZ
     localparam BDBANKA       = 15;
     localparam BDBANKW       = 64;
-    localparam MAX_PRECISION = 8;
+    localparam MAX_PRECISION = 16;
     localparam XLEN          = 32;
 
     Logger logger;
@@ -49,16 +49,23 @@ module transpose_tester();
 
     task automatic write_to_ram(string filename, Logger logger);
         data_q_t val_q;
+        int word_cnt = 0;
         logger.print($sformatf("Parsing %s...", filename));
         val_q = datafile_to_q(filename, logger);
         logger.print($sformatf("Done Parsing %s", filename));
         logger.print($sformatf("Number of elements %d", val_q.size()));
-        prec = 6;
+        prec = 8;
         baddr = 0;
         start = 1'b1;
         @(posedge clk);
-        for (int i =0; i<val_q.size(); i++) begin
-            iword = val_q[i];
+        while (word_cnt<val_q.size()) begin
+        // for (int i =0; i<val_q.size(); i++) begin
+            if (busy==1'b1) begin
+                iword = 0;
+            end else begin
+                iword = val_q[word_cnt];
+                word_cnt += 1;
+            end
             @(posedge clk);
         end
         start = 1'b0;
