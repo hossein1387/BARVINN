@@ -16,7 +16,8 @@ module data_transposer #(
     output logic                      busy,        // A signal to indicate the status of the module
     output logic                      mvu_wr_en,   // MVU write enable to input RAM
     output logic [MVU_ADDR_LEN-1 : 0] mvu_wr_addr, // MVU write address to input RAM
-    output logic [MVU_DATA_LEN-1 : 0] mvu_wr_word  // MVU write data to input RAM
+    output logic [MVU_DATA_LEN-1 : 0] mvu_wr_word, // MVU write data to input RAM
+    input  logic [31    : 0]          qaddr        // Start signal to indicate first word to be transposed
 );
     // GEN variables
     genvar i,j;
@@ -78,13 +79,13 @@ module data_transposer #(
     function void transpose_write(int pos);
         for (int i=0; i<prec_reg; i++) begin
             if (prec_reg==2) begin
-                buffer[i] = words2[i]<<(NUM_WORDS-pos-1) | buffer[i];
+                buffer[i] <= words2[i]<<(pos) | buffer[i];
             end else if (prec_reg==4) begin
-                buffer[i] = words4[i]<<(NUM_WORDS-pos-1) | buffer[i];
+                buffer[i] <= words4[i]<<(pos) | buffer[i];
             end else if (prec_reg==8) begin
-                buffer[i] = words8[i]<<(NUM_WORDS-pos-1) | buffer[i];
+                buffer[i] <= words8[i]<<(pos) | buffer[i];
             end else if (prec_reg==16) begin
-                buffer[i] = words16[i]<<(NUM_WORDS-pos-1) | buffer[i];
+                buffer[i] <= words16[i]<<(pos) | buffer[i];
             end
         end
     endfunction
@@ -95,6 +96,7 @@ module data_transposer #(
 
 
     assign mvu_wr_word= buffer[wd_cnt];
+    assign busy       = (rd_cnt >= NUM_WORDS-step) ? 1'b1 : 1'b0;
     always_comb begin 
         case (prec_reg)
                   2 : step = 16;
@@ -107,7 +109,6 @@ module data_transposer #(
 
     always_ff @(posedge clk) begin
         if(~rst_n) begin
-            busy      <= 0;
             mvu_wr_en <= 0;
             rd_cnt    <= 0;
             wd_cnt    <= 0;
@@ -127,12 +128,11 @@ module data_transposer #(
                     end
                 end
                 DATA_READ : begin
-                    if(rd_cnt >NUM_WORDS-step) begin
+                    if(rd_cnt > NUM_WORDS-step) begin
                         next_state <= TRANSPOSE;
                         rd_cnt     <= 0;
                         wd_cnt     <= 0;
                         mvu_wr_en  <= 1'b1;
-                        busy       <= 1'b1;
                     end else begin
                         transpose_write(rd_cnt);
                         rd_cnt     <= rd_cnt  + step;
@@ -140,11 +140,13 @@ module data_transposer #(
                     end
                 end
                 TRANSPOSE: begin
-                    if(wd_cnt >prec_reg) begin
+                    if(wd_cnt >=prec_reg-1) begin
                         wd_cnt     <= 0;
-                        busy       <= 1'b0;
                         next_state <= IDLE;
                         mvu_wr_en  <= 1'b0;
+                        for (int i=0; i<MAX_DATA_PREC; i++) begin
+                            buffer[i] <= {NUM_WORDS{1'b0}};
+                        end
                     end else begin
                         next_state <= TRANSPOSE;
                         wd_cnt     <= wd_cnt  + 1;
@@ -155,7 +157,6 @@ module data_transposer #(
                     next_state <= IDLE;
                     wd_cnt     <= 0;
                     rd_cnt     <= 0;
-                    busy       <= 0;
                 end
             endcase
         end
