@@ -45,8 +45,7 @@ module transpose_tester();
         .busy       (busy       ),
         .mvu_wr_en  (mvu_wr_en  ),
         .mvu_wr_addr(mvu_wr_addr),
-        .mvu_wr_word(mvu_wr_word),
-        .qaddr      (word_cnt   )
+        .mvu_wr_word(mvu_wr_word)
 );
 
     task automatic write_to_ram(string filename, Logger logger);

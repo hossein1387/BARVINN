@@ -16,8 +16,7 @@ module data_transposer #(
     output logic                      busy,        // A signal to indicate the status of the module
     output logic                      mvu_wr_en,   // MVU write enable to input RAM
     output logic [MVU_ADDR_LEN-1 : 0] mvu_wr_addr, // MVU write address to input RAM
-    output logic [MVU_DATA_LEN-1 : 0] mvu_wr_word, // MVU write data to input RAM
-    input  logic [31    : 0]          qaddr        // Start signal to indicate first word to be transposed
+    output logic [MVU_DATA_LEN-1 : 0] mvu_wr_word  // MVU write data to input RAM
 );
     // GEN variables
     genvar i,j;
@@ -95,7 +94,8 @@ module data_transposer #(
     trans_state_t next_state;
 
 
-    assign mvu_wr_word= buffer[wd_cnt];
+    // Writing buffer into MVU with MSB first format
+    assign mvu_wr_word= buffer[prec_reg-wd_cnt-1];
     assign busy       = (rd_cnt >= NUM_WORDS-step) ? 1'b1 : 1'b0;
     always_comb begin 
         case (prec_reg)
