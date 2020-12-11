@@ -75,6 +75,10 @@ module data_transposer #(
         end
     endgenerate
 
+    // Data needs to be stored in MVU in tranposed and MSB first. The buffer holds data in 
+    // Transposed format, however, for writing to MVU, we need to write in MSB first format.
+    // Hence for an N precision input array , the word stored at address 0 in the buffer needs 
+    // to be written to N-1 etc.
     function void transpose_write(int pos);
         for (int i=0; i<prec_reg; i++) begin
             if (prec_reg==2) begin
