@@ -41,4 +41,5 @@
 ../../../pito_riscv/vsrc/rv32_csr.sv
 ../../../pito_riscv/vsrc/rv32_barrel_csrfiles.sv
 ../../../vsrc/accelerator.sv
+../../../vsrc/data_transposer.sv
 ./conv_tester.sv

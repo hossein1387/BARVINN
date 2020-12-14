@@ -5,6 +5,7 @@ import pito_pkg::*;
 module conv_tester();
 //==================================================================================================
 // Global Variables
+    localparam XLEN                 = 32;
     localparam CLOCK_SPEED          = 50; // 10MHZ
     localparam NMVU                 = 8;   /* Number of MVUs. Ideally a Power-of-2. */
     localparam N                    = 64;   /* N x N matrix-vector product size. Power-of-2. */
@@ -37,19 +38,23 @@ module conv_tester();
     logic              pito_program;
     logic [pito_pkg::HART_CNT_WIDTH-1:0] mvu_irq;
 
-    logic [        NMVU-1  : 0] mvu_wrc_en  ; // input  wrc_en;
-    logic [        NMVU-1  : 0] mvu_wrc_grnt; // output wrc_grnt;
-    logic [     BDBANKA-1  : 0] mvu_wrc_addr; // input  wrc_addr;
-    logic [     BDBANKW-1  : 0] mvu_wrc_word; // input  wrc_word;
-    logic [NMVU*BWBANKA-1  : 0] mvu_wrw_addr; // Weight memory: write address
-    logic [NMVU*BWBANKW-1  : 0] mvu_wrw_word; // Weight memory: write word
-    logic [        NMVU-1  : 0] mvu_wrw_en  ; // Weight memory: write enable
-    logic [        NMVU-1  : 0] mvu_irq_tap ; // MVU IRQ tap signal
-    logic [        NMVU-1  : 0] mvu_rdc_en  ; // input  rdc_en;
-    logic [        NMVU-1  : 0] mvu_rdc_grnt; // output rdc_grnt;
-    logic [NMVU*BDBANKA-1  : 0] mvu_rdc_addr; // input  rdc_addr;
-    logic [NMVU*BDBANKW-1  : 0] mvu_rdc_word; // output rdc_word;
-
+    logic [         NMVU-1 : 0] mvu_wrc_en  ; // input  wrc_en;
+    logic [         NMVU-1 : 0] mvu_wrc_grnt; // output wrc_grnt;
+    logic [      BDBANKA-1 : 0] mvu_wrc_addr; // input  wrc_addr;
+    logic [      BDBANKW-1 : 0] mvu_wrc_word; // input  wrc_word;
+    logic [ NMVU*BWBANKA-1 : 0] mvu_wrw_addr; // Weight memory: write address
+    logic [ NMVU*BWBANKW-1 : 0] mvu_wrw_word; // Weight memory: write word
+    logic [         NMVU-1 : 0] mvu_wrw_en  ; // Weight memory: write enable
+    logic [         NMVU-1 : 0] mvu_irq_tap ; // MVU IRQ tap signal
+    logic [         NMVU-1 : 0] mvu_rdc_en  ; // input  rdc_en;
+    logic [         NMVU-1 : 0] mvu_rdc_grnt; // output rdc_grnt;
+    logic [ NMVU*BDBANKA-1 : 0] mvu_rdc_addr; // input  rdc_addr;
+    logic [ NMVU*BDBANKW-1 : 0] mvu_rdc_word; // output rdc_word;
+    logic [        NMVU*31 : 0] mvu_data_prec ; 
+    logic [        NMVU*31 : 0] mvu_data_baddr; 
+    logic [    NMVU*XLEN-1 : 0] mvu_data_iword; 
+    logic [         NMVU-1 : 0] mvu_data_start; 
+    logic [         NMVU-1 : 0] mvu_data_busy ; 
     accelerator accelerator(
                     .clk              (clk            ),
                     .rst_n            (rst_n          ),
@@ -60,10 +65,11 @@ module conv_tester();
                     .pito_imem_w_en   (imem_w_en      ),
                     .pito_dmem_w_en   (dmem_w_en      ),
                     .pito_pito_program(pito_program   ),
-                    .mvu_wrc_en       (mvu_wrc_en     ),
-                    .mvu_wrc_grnt     (mvu_wrc_grnt   ),
-                    .mvu_wrc_addr     (mvu_wrc_addr   ),
-                    .mvu_wrc_word     (mvu_wrc_word   ),
+                    .mvu_data_prec    (mvu_data_prec  ),
+                    .mvu_data_baddr   (mvu_data_baddr ),
+                    .mvu_data_iword   (mvu_data_iword ),
+                    .mvu_data_start   (mvu_data_start ),
+                    .mvu_data_busy    (mvu_data_busy  ),
                     .mvu_wrw_addr     (mvu_wrw_addr   ),
                     .mvu_wrw_word     (mvu_wrw_word   ),
                     .mvu_wrw_en       (mvu_wrw_en     ),
@@ -394,44 +400,29 @@ module conv_tester();
         end
     endtask
 
-    task automatic writeInputVec(int width, string file, logic unsigned[BDBANKA-1 : 0] startaddr, int INPUT_VEC_SIZE=4096);
-        data_q_t input_q;
-        logic[INPUT_PRECISION-1:0]  input_unpacked[BDBANKW];
-        logic[BDBANKW*INPUT_PRECISION-1 : 0] input_word_packed;
-        logic mvu_data_word_unpacked[BDBANKW-1:0];
-        logic[BDBANKW-1:0] mvu_data_word;
-        input_q = datafile_to_q(file, logger);
-        assert(width==input_q.size()) else begin
-            logger.print($sformatf("Number of elements in %d is not matching requested vector size (%0d). Abort sim.", input_q.size(), width), "ERROR");
-            $finish();
-        end
-        assert(width*INPUT_PRECISION==INPUT_VEC_SIZE) else begin
-            logger.print($sformatf("Requested vector cannot fit into MVU input ram. (avail: %d bits, req: %d) Abort sim.", INPUT_VEC_SIZE, width*WEIGHT_PRECISION), "ERROR");
-            $finish();
-        end
-        assert(BDBANKW%INPUT_PRECISION==0) else begin
-            logger.print($sformatf("INPUT word size (%0d) must be divisible by input precision (%0d)", BDBANKW, INPUT_PRECISION), "ERROR");
-            $finish();
-        end
-        for (int i=0; i<width; i++) begin
-            input_unpacked[i] = input_q[i];
-            $display($sformatf("input_unpacked[%2d]: %b", i, input_unpacked[i]));
-        end
-
-        input_word_packed = {<<{input_unpacked}};
-        // Now transpose the word so that the MSB of every word is wrtten first
-        $display("%b", input_word_packed);
-        for (int i=0; i<INPUT_PRECISION; i++) begin
-            for (int j=0; j<BDBANKW; j++) begin
-                mvu_data_word[j] = input_word_packed[i+j*INPUT_PRECISION];
+    task automatic write_to_ram(string filename, int mvu_id);
+        data_q_t val_q;
+        int word_cnt = 0;
+        logger.print($sformatf("Parsing %s...", filename));
+        val_q = datafile_to_q(filename, logger);
+        logger.print($sformatf("Done Parsing %s", filename));
+        logger.print($sformatf("Number of elements %d", val_q.size()));
+        mvu_data_prec[mvu_id*32 +: 32] = 8;
+        mvu_data_baddr[mvu_id*32 +: 32] = 0;
+        mvu_data_start[mvu_id] = 1'b1;
+        @(posedge clk);
+        while (word_cnt<val_q.size()) begin
+        // for (int i =0; i<val_q.size(); i++) begin
+            if (mvu_data_busy[mvu_id]==1'b1 || mvu_wrc_en == 1'b1) begin
+                mvu_data_iword[mvu_id*XLEN +: XLEN] = 0;
+            end else begin
+                mvu_data_iword[mvu_id*XLEN +: XLEN] = val_q[word_cnt];
+                word_cnt += 1;
             end
-            // Reverse bits in the word of the packed data
-            {<<{mvu_data_word_unpacked}} = mvu_data_word;
-            mvu_data_word = {>>{mvu_data_word_unpacked}};
-            // $display("%b",mvu_data_word);
-            writeData(mvu_data_word, startaddr);
-            startaddr = startaddr + 1;
+            @(posedge clk);
         end
+        mvu_data_start[mvu_id] = 1'b0;
+        @(posedge clk);
     endtask
 
     task program_mvu();
@@ -444,7 +435,7 @@ module conv_tester();
         //writeDataRepeat('hafafafafafafafaf, 'h0000, 4);
         // writeDataRepeat('h0123456789abcdef, 'h0000, 4);
         writeWeightMat(64, 64, "weights.txt", 0, BWBANKW*WEIGHT_PRECISION);
-        writeInputVec(64, "input.txt", 0, BDBANKW*INPUT_PRECISION);
+        write_to_ram("input.txt",0);
         // writeWeightsRepeat({BWBANKW{1'b1}}, 'h0, 8);
     endtask
 
