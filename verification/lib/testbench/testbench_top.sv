@@ -5,12 +5,16 @@ module testbench_top();
 // Test variables
     localparam CLOCK_SPEED = 50; // 10MHZ
     Logger logger;
-    string sim_log_file = "csr_tester.log";
+    string sim_log_file = "testbench_top.log";
 //==================================================================================================
     logic clk;
     pito_interface pito_inf(clk);
     mvu_interface mvu_inf(clk);
-    
+    accel_interface accel_inf(clk);
+    accelerator accel(.rv_intf(pito_inf),
+                      .mvu_intf(mvu_inf),
+                      .accel_inf(accel_inf));
+
     // interface_tester tb;
     core_tester tb;
 

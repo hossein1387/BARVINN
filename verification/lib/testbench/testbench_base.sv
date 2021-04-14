@@ -3,7 +3,7 @@ import rv32_pkg::*;
 import rv32_utils::*;
 import pito_pkg::*;
 
-class testbench_base extends BaseObj;
+class accel_testbench_base extends BaseObj;
 
     string firmware;
     virtual pito_interface inf;
