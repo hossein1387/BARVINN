@@ -3,10 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-MVU Accelerator Project Documentation
-=======================================
+BARVIN: Barrel RISC-V Neural Network Accelerator
+================================================
 Editor: **MohammadHossein AskariHemmat**
-`m.h.askari.hemmat@gmail.com <mailto:m.h.askari.hemmat@gmail.com?subject=Accelerator%20User%20Manual>`__
+`m.h.askari.hemmat@gmail.com <mailto:m.h.askari.hemmat@gmail.com?subject=BARVINN%20User%20Manual>`__
 
 .. toctree::
    :maxdepth: 2

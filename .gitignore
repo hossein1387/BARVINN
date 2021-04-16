@@ -1,3 +1,6 @@
+*~
+/_build
+/.DS_Store
 *.str
 *.debug
 *.npy
@@ -17,4 +20,3 @@ synthesis/
 *.hex
 *.obj
 .DS_Store
-docs/_build
