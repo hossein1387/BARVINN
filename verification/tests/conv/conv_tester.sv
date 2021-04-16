@@ -87,14 +87,14 @@ module conv_tester();
     endtask
 
     task automatic write_instr_to_ram(rv32_data_q instr_q, int backdoor, int log_to_console);
-        if(log_to_console) begin
+        if(log_to_console==1) begin
             logger.print_banner($sformatf("Writing %6d instructions to the RAM", instr_q.size()));
             logger.print($sformatf(" ADDR  INSTRUCTION          INSTR TYPE       OPCODE          DECODING"));
         end
         if (backdoor == 1) begin
             for (int addr=0 ; addr<instr_q.size(); addr++) begin
                 accelerator.pito_rv32_core.i_mem.bram_32Kb_inst.inst.native_mem_module.blk_mem_gen_v8_4_3_inst.memory[addr] = instr_q[addr];
-                if(log_to_console) begin
+                if(log_to_console==1) begin
                     logger.print($sformatf("[%4d]: 0x%8h     %s", addr, instr_q[addr], get_instr_str(rv32i_dec.decode_instr(instr_q[addr]))));
                 end
             end
@@ -106,7 +106,7 @@ module conv_tester();
                 @(posedge clk);
                 imem_data = instr_q[addr];
                 imem_addr = addr;
-                if(log_to_console) begin
+                if(log_to_console==1) begin
                     logger.print($sformatf("[%4d]: 0x%8h     %s", addr, instr_q[addr], get_instr_str(rv32i_dec.decode_instr(instr_q[addr]))));
                 end
             end
@@ -381,12 +381,12 @@ module conv_tester();
         weight_q = datafile_to_q(file, logger);
         for (int i=0; i<width*height; i++) begin
             weight_unpacked[i] = weight_q[i];
-            $display($sformatf("weight_unpacked[%2d]: %b", i, weight_unpacked[i]));
+            // $display($sformatf("weight_unpacked[%2d]: %b", i, weight_unpacked[i]));
         end
 
         weight_word_packed = {<<{weight_unpacked}};
         // Now transpose the word so that the MSB of every word is wrtten first
-        $display("%b", weight_word_packed);
+        // $display("%b", weight_word_packed);
         for (int i=0; i<WEIGHT_PRECISION; i++) begin
             for (int j=0; j<BWBANKW; j++) begin
                 mvu_weight_word[j] = weight_word_packed[i+j*WEIGHT_PRECISION];
@@ -394,7 +394,7 @@ module conv_tester();
             // Reverse bits in the word of the packed data
             {<<{mvu_weight_word_unpacked}} = mvu_weight_word;
             mvu_weight_word = {>>{mvu_weight_word_unpacked}};
-            $display("%b",mvu_weight_word);
+            // $display("%b",mvu_weight_word);
             writeWeights(mvu_weight_word, startaddr);
             startaddr = startaddr + 1;
         end

@@ -9,5 +9,5 @@
     cd verification
 
 
-	./do_test.py -f files.f -t accel_tester -s xilinx -l libs.f -m vlogmacros.f
-        
+    ./do_test.py -f files.f -t accel_tester -s xilinx -l libs.f -m vlogmacros.f
+

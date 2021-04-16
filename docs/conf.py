@@ -71,6 +71,5 @@ html_static_path = []
 # 'searchbox.html']``.
 #
 # html_sidebars = {}
-
 # Set number for figures
 numfig = True
