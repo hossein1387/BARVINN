@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-BARVIN: Barrel RISC-V Neural Network Accelerator
-================================================
+BARVINN: Barrel RISC-V Neural Network Accelerator
+=================================================
 Editor: **MohammadHossein AskariHemmat**
 `m.h.askari.hemmat@gmail.com <mailto:m.h.askari.hemmat@gmail.com?subject=BARVINN%20User%20Manual>`__
 
