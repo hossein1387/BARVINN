@@ -1,4 +1,6 @@
-# Accelerator Project 
+# BARVINN: A Barlle RISC-V Neural Network Accelerator:
+
+![alt text](https://github.com/hossein1387/Accelerator/blob/documentation/docs/_static/BARVINN_LOGO_2_DARK.png)
 
 ## How to Use:
     
