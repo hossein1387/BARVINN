@@ -18,16 +18,4 @@ Editor: **MohammadHossein AskariHemmat**
    software
    fpga_prototyping
    examples
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-Documentation
-=============
-
-The documentation is hosted in the docs folder and is re-created on pushes to master. When contributing to the project please consider the [contribution guide](https://github.com/openhwgroup/cva6/blob/master/CONTRIBUTING.md).
-
+   credits
