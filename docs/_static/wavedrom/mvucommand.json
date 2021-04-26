@@ -1,0 +1,5 @@
+ [
+  {"bits": 29, "name":"Cycle Countdown", "attr":"RW"},
+  {"bits": 1, "name":"Mx En", "attr":"RW"},
+  {"bits": 2, "name":"Mul Mode", "attr":"RW"}
+]

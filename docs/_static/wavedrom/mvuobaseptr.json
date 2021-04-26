@@ -1,0 +1,12 @@
+ [
+  {"bits": 15, "name": "mvuobaseptr"},
+  {"bits": 9},
+  {"bits": 1, "name":"mvu0"},
+  {"bits": 1, "name":"mvu1"},
+  {"bits": 1, "name":"mvu2"},
+  {"bits": 1, "name":"mvu3", "attr": "destination mvu"},
+  {"bits": 1, "name":"mvu4"},
+  {"bits": 1, "name":"mvu5"},
+  {"bits": 1, "name":"mvu6"},
+  {"bits": 1, "name":"mvu7"}
+]
