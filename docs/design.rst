@@ -53,7 +53,7 @@ Each MVU has a local memory to store activation and weights. The MVUs are connec
 
   Bit serial operation in MVU.
 
-As we mentioned before, the MVU is capable of performing computation with different bit precision. The way we achieve this task is by storing values in MSB transposed format in memory. This format of saving data in memory allows MVU to read only as many words as the operand precision. Since all the computations are happening in this format, the user should not worry about memory layout except when it wants to read results or write inputs (such as input image) into MVU rams. To solve this issue, there is a data transposer module that transposes the data to the correct format. Data transposer's job is to write input data (that is stored in a processor RAM in linear format) into MVU RAM in a transposed format. The input word can be packed
+As we mentioned before, the MVU is capable of performing computation with different bit precision. The way we achieve this task is by storing values in MSB transposed format in memory. This format of saving data in memory allows MVU to read only as many words as the operand precision specifies. Since all the computations are happening in this format, the user should not worry about memory layout except when it wants to read results or write inputs (such as input image) into MVU rams. To solve this issue, there is a data transposer module that transposes the data to the correct format. Data transposer's job is to write input data (that is stored in a processor RAM in linear format) into MVU RAM in a transposed format. The input word can be packed
 of 2,4,8 or 16 bits data. Given the input data precision (prec) the transposer will unpack, transpose and store them in the correct format. Once the MVU word is prepared, data tranposer will go into `BUSY` state in which it will ignore any incoming new input  data. At this point, the transposed data will be written into MVU word. Once complete, it will go back into `IDLE` state and it will wait for a new posedge on start signal to start the process all over again.
  
 .. figure:: _static/Data_transposer.png
@@ -64,9 +64,9 @@ of 2,4,8 or 16 bits data. Given the input data precision (prec) the transposer w
   Data transposer modlue, this module will pack vectors of size `XLEN` in MSB first transposed format.
 
 
-MVU Job Configuration:
+MVU Job Configuration
 ^^^^^^^^^^^^^^^^^^^^^^^
-MVUs are programmed to perfom a single job. A job is started by the controller by raising the `start` signal. Once the job is finished, the MVU will generate an interrupt, informing the controller that the requested job is finished and the results are ready to be sent back to host or to other MVUs. Once MVU is busy with a job, the `busy` signal is raised. During this time, MVU can be programmed for the next job but it raising the `start` signal will not initiate the job. 
+MVUs are programmed to perfom a single job. A job is started by the controller by raising the `start` signal. Once the job is finished, the MVU will generate an interrupt, informing the controller that the requested job is finished and the results are ready to be sent back to host or to other MVUs. Once MVU is busy with a job, the `busy` signal is raised. During this time, MVU can be programmed for the next job and raising the `start` signal will not initiate any new job. 
 
 
 .. figure:: _static/mvu_job_config.svg
@@ -77,24 +77,124 @@ MVUs are programmed to perfom a single job. A job is started by the controller b
   Timing diagram for configuring an MVU job.
 
 
-:numref:`mvu_job_config` shows the timing diagram for sending a job to MVU. For sake of breavity, all config parameters are represented by `configs` signal. In the following sections, we will review what parameters that can be set in the MVU.
+:numref:`mvu_job_config` shows the timing diagram for sending a job to MVU. For sake of breavity, all config parameters are represented by `configs` signal. In the following sections, we will review what parameters can be set in the MVU.
 
-To submit a job to MVU, we first need to understand how the mvu works. 
+Feature map memory access
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-PITO: A Barrel RISC-V Processor:
+ :numref:`input_feature_map_mem_layouts` illustrates memory layout for feature maps. MVU expects a NHWC layout for feature map features. Each element should be stored in a MSB transposed format. :numref:`input_feature_map_mem_layouts` shows that each word is 64 bit. As a result, accessing memory at location `0` will return a 64-bit word, where each bit, belongs to the MSB bit of the first 64 channels of the feature map. Elements if these 64 channels are concatenated (in MSB transposed format) together to form a channel block. The next memory address i.e `1` will return the `MSB-1` bits of the first 64 channels. This pattern continues until we reach the configured input precision i.e. `iprecision`. 
+
+.. figure:: _static/input_feature_map_mem_layouts.png
+  :width: 800
+  :alt: Alternative text
+  :name: input_feature_map_mem_layouts
+
+  Input feature map memory layout.
+
+
+Elements of each channel are written into feature map memory with an offset of `iprecision`. In case there are more than 64 channels in the feature map, we will store the first 64 channels in the first block, the second 64 channels into the second block and so on. As an example, an input tensor of `[N=1, H=8, W=8, C=256]` with 2 bit precision, will have 4 channel blocks, each block will have 64 rows of a 2 by 64 bit elements. 
+
+
+Weight Memory Access
+^^^^^^^^^^^^^^^^^^^^^^
+
+Weight memory layout is very similar to feature map memory layout. :numref:`weight_mem_layouts` illustrates weight memory layout. Same as :numref:`input_feature_map_mem_layouts`, MVU expects a NHWC layout for weight tensor. However, in weight memory, we have input and output channels. By default, weight memory words are 4096 bit long. Allowing to concatenate a single MSB bit of `64x64` channels per row of weight memory. In deep neural network models, weight tensors are usually consist of a set of filters. The weight memory layout in MVU allows to concatenate 64 input channels into 64 set of filters i.e. output channels. Like feature map memory layout, in case we have more than 64 input channels, we will write them into the next input channel blocks. Instead of `iprecision`, here we use `wprecision` to specify howmany bits are required to represent any weight element.
+
+.. figure:: _static/weight_mem_layouts.png
+  :width: 800 
+  :alt: Alternative text 
+  :name: weight_mem_layouts 
+
+  Weight memory layout. 
+
+
+Like feature map memory layout, channel blocks are grouped together to form width coloumns and then height rows. Finally, we can group multiple height rows together to form output channels i.e. filters.
+
+
+.. _Jump Schedules:
+
+Jump Schedules
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The memory layout descibed in previous sections allows MVU to efficiently compute matrix multiplication between input vecotrs and weight matrices. However, for convolutinal neural network, many matrix multiply should be performed. One of the most common ways to perform convolution is to slide the weight tensor over input. :numref:`slide_window_valid` illustrates this operation. 
+
+.. figure:: _static/slide_window_valid.png
+  :width: 800 
+  :alt: Alternative text 
+  :name: slide_window_valid
+
+  Sliding window operation to perform Convolution. 
+
+13 + 15 + 4 + 12
+As you can see in :numref:`slide_window_valid` , if we just slide the weight tensor over input, not all dot products are valid . Luckily, for a given stride, padding and weight shape, we can pre-compute which memory locations should be accessed by the MVU. We took advantage of this fact and have provided a set of `jump` settings for input and weight tensors. :numref:`feature_map_jump_schedule` and :numref:`weight_jump_schedule` illustrates what each jump configuration is:
+
+.. figure:: _static/feature_map_jump_schedule.png
+  :width: 800
+  :alt: Alternative text
+  :name: feature_map_jump_schedule
+
+  Input feature jump schedule.
+
+For inputs we have the following configurable `jump` variables:
+
+- `j0`:  aka `iprec`, jump over precison (implicit).
+- `j1`: `ijump0` Specifies if we have reached window width, if so, move to the next row in window.
+- `j2`: `ijump1` Specifies if we have reached window height and width, if so, move back to window start for next precision combo or next filter set (i.e. for same output (x,y), start computing next output channel block).
+- `j3`: `ijump2` Specifies if we have finished all filter sets in window and done output (x,y). Slide window by horizontal stride. Start output (x+1, y). Note that diagram shows horizontal stride of 1.
+- `j4`: ijump3: Copy ijump2 since only 4 jumps needed.
+
+
+
+.. figure:: _static/weight_jump_schedule.png
+  :width: 800
+  :alt: Alternative text
+  :name: weight_jump_schedule
+
+  Weight jump schedule.
+
+- `j0`: aka `wprecision`, jump over precison (implicit).
+- `j1`: `wjump0` Specifies if we have reached window width and height, if so, move back to filter start for next precision combo.
+- `j2`: `wjump1` Specifies if we have finished all bit combos for current filter set and channel block for output (x,y) and if so, move to next filter set and compute next channel block for output (x,y).
+- `j3`: `wjump2`: Specifies if we have finished all filter sets and channel blocks for output (x,y) and if so, move back to start of first filter set for next window and output (x+1, y).
+- `j4`: `wjump3` Copy wjump2 since only 4 jumps needed.
+
+
+In general, each MVU has 44 configurable registers that can be used in software. Section :ref:`Control Status Registers` provides details of each register. 
+
+PITO: A Barrel RISC-V Processor
 ------------------------------------
-To make use of MVUs for neural networks, some form of the control unit is required. It is not possible to foresee and provide for all possible neural networks that may crop up in theliterature in the future. Therefore, the high-level sequencing of tensor operations should beprovided for in software, possibly assisted by `glue` logic to help drive the MVUs’ control signals. 
+To make use of MVUs for neural networks, some form of control unit is required. It is not possible to foresee and provide for all possible neural networks that may crop up in the literature in the future. Therefore, the high-level sequencing of tensor operations should be provided for in software, possibly assisted by `glue` logic to help drive the MVUs’ control signals. 
 
-PITO is a Barrel RISC-V processor, designed to control the 8 MVUs in `Bilaniuk et al. (2019)` using separate but communicating hardware threads (harts) that each manage their respective MVUs. Neural network layers can then be executed either in parallel or in a pipelined fashion depending on whether the neural network software is compiled to maximize throughput or minimize latency. This design also allows MVUs to complete tensor operations independently of each other. However, the drawback is that, at least nominally, this requires 8 microprocessors to execute the 8 programs, putting serious pressure on the remaining logic of the host FPGA. We instead amortized the fixed costs of the processor by adopting an old idea: `the barrel processor`. By making the barrel processor 8-way threaded, we may assign one thread to control each of the MVUs, while amortizing the fixed costs of each microprocessor over the 8 threads. Because every thread comes up for execution only every 8 clock cycles, up to 8 pipeline stages including instruction fetch, decode, execution and data read & writes can be completely hidden. Branch prediction units arealso made unnecessary. Because even modest tensor operations can require hundreds of matrix-vector products (and therefore clock cycles) to execute on an MVU, the barrel processor has the opportunity to fully turn over dozens of times in the interim, allowing each thread to issue the next command to its MVU in a few instructions.
+PITO is a Barrel RISC-V processor, designed to control the 8 MVUs in `Bilaniuk et al. (2019)` using separate but communicating hardware threads (harts) that each manage their respective MVUs. Neural network layers can then be executed either in parallel or in a pipelined fashion depending on whether the neural network software is compiled to maximize throughput or minimize latency. This design also allows MVUs to complete tensor operations independently of each other. However, the drawback is that, at least nominally, this requires 8 microprocessors to execute the 8 programs, putting serious pressure on the remaining logic of the host FPGA. We instead amortized the fixed costs of the processor by adopting an old idea: `the barrel processor`. By making the barrel processor 8-way threaded, we may assign one thread to control each of the MVUs, while amortizing the fixed costs of each microprocessor over the 8 threads. Because every thread comes up for execution only every 8 clock cycles, up to 8 pipeline stages including instruction fetch, decode, execution and data read & writes can be completely hidden. Branch prediction units are also made unnecessary. Because even modest tensor operations can require hundreds of matrix-vector products (and therefore clock cycles) to execute on an MVU, the barrel processor has the opportunity to fully turn over dozens of times in the interim, allowing each thread to issue the next command to its MVU in a few instructions.
 
-A barrel processor is a form of a fine-grain multithreading processor that exploits thread-levelparallelism by switching between different threads on each clock cycle (Hennessey and Patterson,2011). The aim is to maximize the overall utilization of the processor’s resources, and instructionthroughput. This is similar to the technique of simultaneous multi-threading (SMT) that is used inmodern superscalar processors. However, unlike SMT superscalar processors, barrel processors donot issue more than one instruction per clock cycle. Instead, a single execution pipeline is shared byall threads.
-
-
-As mentioned earlier, MVU array has many configuration settings. We used a barrel RISC-V design as a controller to send control signals to each MVU. The connection between the controller and the MVU array is through control status registers (CSRs). 
+A barrel processor is a form of a fine-grain multithreading processor that exploits thread-levelparallelism by switching between different threads on each clock cycle (Hennessey and Patterson,2011). The aim is to maximize the overall utilization of the processor’s resources, and instruction throughput. This is similar to the technique of simultaneous multi-threading (SMT) that is used in modern superscalar processors. However, unlike SMT superscalar processors, barrel processors do not issue more than one instruction per clock cycle. Instead, a single execution pipeline is shared byall threads. :numref:`pito_barreled` illustartes the data path of `PITO`, a 5 stage 8 hart, barrel processor compatible with RV32I RISC-V ISA.
 
 
+.. figure:: _static/pito_barreled.png
+  :width: 800
+  :alt: Alternative text
+  :name: pito_barreled
 
-Interrupts :
+  PITO Datapath, a 5 stage 8 hart, barrel processor. 
+
+
+
+We adopted a Harvard architecture and divided the instruction and data cache. In our design, we used 32KB BRAM for each cache. This gives a 1K word space to store data and instructions to control each MVU. The processor is an in-order CPU and instructions are executed following compilation order and without any further scheduling. However, a hart scheduler is needed to give access to the required resources for the hart at each stage. In the fetch stage, each hart needs to fetch instructions from instruction cache. As explained earlier, we used 32KB of instruction cache which is shared between all harts. However, the program counter (PC) for each hart is different. To keep track of this, we used 8 registers for PCs and the hart scheduler indicates which register should be accessed at any given time. In the Decode stage, the fetched instruction needs to be decoded, and source registers (rs1 and rs2) or an immediate (imm) operand needs to be loaded. Each hart has its own register file and in Decode stage, the hart scheduler gives access to the scheduled hart’s registerfile.
+
+
+.. figure:: _static/pito_code_run.png
+  :width: 800
+  :alt: Alternative text
+  :name: pito_code_run
+
+  This figure shows 8 harts running in the barrel processor that has 5-stage pipeline. The figure on the right shows every 8 clock cycles, the program counter of the associated hart increments, which allows this pipeline to be implemented without any data or control hazard circuitry.
+
+
+
+The hart scheduler itself uses a strict round robin algorithm. No preemption and priority is implemented and every hart is given a fixed amount of time slots for execution. Figure 4.3a showshow harts are scheduled for execution in our design. Considering the execution for Hart[0], it takes 5 clock cycles for an instruction to be completed. After the 5th clock tick, no more processing associated to Hart[0] is performed. The next three slots are given to Hart[5], Hart[6] and Hart[7]. Thus each hart executes an instruction every 8th cycle of the main clock. Hence the CPI of 8. From the perspective of the main CPU, the throughput is one instruction per clock cycle. From the perspective of each hart, we are running at an 8th of the main clock speed with a CPI of 1.
+
+PITO is compatible with RV32I RISC-V ISA. Infact, PITO passes all the RISC-V tests, confirming that it is in compliant with the RV32I ISA. In addition to base CSRs (refer to :ref:`RV32_CSR_REG_TABLE` for details) and to specialize PITO for our accelerator, we have added 44 MVU specific CSRs. In Section :ref:`examples`, we have provided example codes to program these CSRs to submit a job to MVU. 
+
+Interrupts
 ^^^^^^^^^^^^^
 
 In BARVINN, MVUs can send interrupts to their associated hart. These interrupts are added to RISC-V custom interrupts `mie` field. To reduce complexity, there are no supports for nested interrupts or interrupt priorities. However, we followed RISC-V's interrupt operation flow. :numref:`pito_irq` illustrates servicing interrupt flow in software and hardware.
@@ -108,10 +208,10 @@ In BARVINN, MVUs can send interrupts to their associated hart. These interrupts 
   Interrupt service routine in hardware and software 
 
 
-Control Status Registers (RISC-V):
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 .. _RV32_CSR_REG_TABLE:
+
+Control Status Registers (RISC-V)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 +------+---------------+-----------------------+-----------------------------------------------------------------+
 | ADRR | CSR           | RO/RW                 | Description                                                     |
@@ -168,7 +268,10 @@ Control Status Registers (RISC-V):
 |      |               | per-thread            |                                                                 |
 +------+---------------+-----------------------+-----------------------------------------------------------------+
 
-Control Status Registers (MVU):
+
+.. _Control Status Registers:
+
+Control Status Registers (MVU)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. _MVU_CSR_REG_TABLE:
@@ -251,56 +354,31 @@ Control Status Registers (MVU):
 |                 |       | 8-16: Pool/Activation clear on jump select (only 0-4 valid) |
 +-----------------+-------+-------------------------------------------------------------+
 
-
-mvubbaseptr:
+mvuwbaseptr
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. figure:: _static/wavedrom/mvubbaseptr.svg
+.. figure:: _static/wavedrom/mvuwbaseptr.svg
   :width: 800
   :alt: Alternative text
 
-mvubjump:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. figure:: _static/wavedrom/mvubjump.svg
-  :width: 800
-  :alt: Alternative text
-
-mvublength:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. figure:: _static/wavedrom/mvublength.svg
-  :width: 800
-  :alt: Alternative text
-
-mvucommand:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. figure:: _static/wavedrom/mvucommand.svg
-  :width: 800
-  :alt: Alternative text
-
-mvuconfig1:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. figure:: _static/wavedrom/mvuconfig1.svg
-  :width: 800
-  :alt: Alternative text
-
-mvuibaseptr:
+mvuibaseptr
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. figure:: _static/wavedrom/mvuibaseptr.svg
   :width: 800
   :alt: Alternative text
 
-mvuijump:
+mvusbaseptr
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. figure:: _static/wavedrom/mvuijump.svg
+.. figure:: _static/wavedrom/mvusbaseptr.svg
   :width: 800
   :alt: Alternative text
 
-mvuilength:
+mvubbaseptr
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. figure:: _static/wavedrom/mvuilength.svg
+.. figure:: _static/wavedrom/mvubbaseptr.svg
   :width: 800
   :alt: Alternative text
 
-mvuobaseptr:
+mvuobaseptr
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 `mvuobaseptr` output address, results of each operation will be written into this address.
 Destination MVU, results can be sent to other MVUs by setting the appropriate MVU (0 to7 ) field. The result can be broadcasted to any number of MVUs in the system.
@@ -309,19 +387,87 @@ Destination MVU, results can be sent to other MVUs by setting the appropriate MV
   :width: 800
   :alt: Alternative text
 
-mvuojump:
+mvuwjump
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+`mvuwjump` is the weight address jumps in loops 0-4. Hence, there are 5 registers all start with `mvuwjump_` but then to access specific loop, you need to append the loop number at the end (refer to :ref:`Jump Schedules` section for details on loop count). For instance, for `loop1` one can use `mvuwjump_1`.
+
+.. figure:: _static/wavedrom/mvuwjump.svg
+  :width: 800
+  :alt: Alternative text
+
+mvuijump
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Same as `mvuwjump`, there are 5 loops that can be used to address input data. These loops can be accessed as `mvuijump_0` to `mvuijump_4`.
+
+.. figure:: _static/wavedrom/mvuijump.svg
+  :width: 800
+  :alt: Alternative text
+
+mvusjump
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+For scaler memory, we have only two jumps and they can be accessed as `mvusjump_0` and `mvusjump_1`.
+
+.. figure:: _static/wavedrom/mvusjump.svg
+  :width: 800
+  :alt: Alternative text
+
+mvubjump
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+For bias memory, we have only two jumps and they can be accessed as `mvubjump_0` and `mvubjump_1`.
+
+.. figure:: _static/wavedrom/mvubjump.svg
+  :width: 800
+  :alt: Alternative text
+
+mvuojump
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Same as `mvuwjump`, there are 5 loops that can be used to address output memory. These loops can be accessed as `mvuojump_0` to `mvuojump_4`.
+
 .. figure:: _static/wavedrom/mvuojump.svg
   :width: 800
   :alt: Alternative text
 
-mvuolength:
+mvuwlength
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+There are 4 registers to specify weight length loops and can be accessed as `mvuwlength_1` to `mvuwlength_4`. Note, `mvuwlength_0` is intentionally not used.
+
+.. figure:: _static/wavedrom/mvuwlength.svg
+  :width: 800
+  :alt: Alternative text
+
+mvuilength
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+There are 4 registers to specify input data length loops and can be accessed as `mvuilength_1` to `mvuilength_4`.  Note, `mvuilength_0` is intentionally not used.
+
+.. figure:: _static/wavedrom/mvuilength.svg
+  :width: 800
+  :alt: Alternative text
+
+mvuslength
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+There is only one register to specify scaler tensor length and it can be accessed as `mvuslength_1`.  Note, `mvuslength_0` is intentionally not used.
+
+.. figure:: _static/wavedrom/mvuslength.svg
+  :width: 800
+  :alt: Alternative text
+
+mvublength
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+There is only one register to specify scaler tensor length and it can be accessed as `mvublength_1`.  Note, `mvublength_0` is intentionally not used.
+
+.. figure:: _static/wavedrom/mvublength.svg
+  :width: 800
+  :alt: Alternative text
+
+mvuolength
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+There are 4 registers to specify input data length loops and can be accessed as `mvuolength_1` to `mvuolength_4`.  Note, `mvuolength_0` is intentionally not used.
+
 .. figure:: _static/wavedrom/mvuolength.svg
   :width: 800
   :alt: Alternative text
 
-mvuprecision:
+mvuprecision
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 `weight precision`, `input precision` and `output precision` that indicates the computation precision accordingly. 
 `isign` and `wsign` can be used to set if the data is signed `1` or not `0`.
@@ -330,7 +476,23 @@ mvuprecision:
   :width: 800
   :alt: Alternative text
 
-mvuquant:
+mvustatus
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Specifies MVU status which is either `busy` (0) or `done` (1).
+
+.. figure:: _static/wavedrom/mvustatus.svg
+  :width: 800
+  :alt: Alternative text
+
+mvucommand
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Setting any value to this register will send a kick start signal to MVU to start the configured job. The register fields are described in :ref:`Control Status Registers`.
+
+.. figure:: _static/wavedrom/mvucommand.svg
+  :width: 800
+  :alt: Alternative text
+
+mvuquant
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 In the case we need to quantize results, `msbidx` can be used. This field indicates that where does the `msb` position starts. 
 
@@ -338,50 +500,18 @@ In the case we need to quantize results, `msbidx` can be used. This field indica
   :width: 800
   :alt: Alternative text
 
-mvusbaseptr:
+mvuscaler
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. figure:: _static/wavedrom/mvusbaseptr.svg
-  :width: 800
-  :alt: Alternative text
+A fixed point multiplier value that can be used to rescale quantized value. 
 
-mvuscaler:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. figure:: _static/wavedrom/mvuscaler.svg
   :width: 800
   :alt: Alternative text
 
-mvusjump:
+mvuconfig1
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. figure:: _static/wavedrom/mvusjump.svg
+.. figure:: _static/wavedrom/mvuconfig1.svg
   :width: 800
   :alt: Alternative text
 
-mvuslength:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. figure:: _static/wavedrom/mvuslength.svg
-  :width: 800
-  :alt: Alternative text
 
-mvustatus:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. figure:: _static/wavedrom/mvustatus.svg
-  :width: 800
-  :alt: Alternative text
-
-mvuwbaseptr:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. figure:: _static/wavedrom/mvuwbaseptr.svg
-  :width: 800
-  :alt: Alternative text
-
-mvuwjump:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. figure:: _static/wavedrom/mvuwjump.svg
-  :width: 800
-  :alt: Alternative text
-
-mvuwlength:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. figure:: _static/wavedrom/mvuwlength.svg
-  :width: 800
-  :alt: Alternative text
