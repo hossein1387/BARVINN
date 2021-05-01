@@ -3,7 +3,29 @@
 Examples
 ============
 
-Matrix Multiplication:
+Environment Setup
+-----------------------
+
+To run a neural network model using BARVINN, you will need to clone 4 different repositories:
+
+- `BARVINN <https://github.com/hossein1387/Accelerator>`_. : The top module repo that re-uses pito and MVU project.
+- `PITO_RISCV <https://github.com/hossein1387/pito_riscv>`_. : The barrel RISC-V processor.
+- `MVU <https://github.com/obilaniu/MVU>`_. : The Matrix Vector Unit accelerator.
+- `MVU_Code_Gen <https://github.com/hossein1387/MVU_Code_Gen>`_. : A repository that contains python libraries to generate configuration code for MVU.
+
+We have added the last three repositories as a gitmodule to BARVINN repository. Hence, you only need to clone BARVINN repository as below:
+
+.. code:: bash
+
+  git clone https://github.com/hossein1387/BARVINN
+  cd BARVINN
+  git submodule update --init --recursive
+
+
+As mentioned earlier, BARVINN requires RISC-V GCC that supports RV32I. You can either install RISC-V GCC with you favorite OS package manager, or you can follow `picorv32 <https://github.com/cliffordwolf/picorv32#building-a-pure-rv32i-toolchain>`_. project to build a pure RV32I toolchain.
+
+
+Matrix Multiplication
 -----------------------
 
 In this example code, we want to program `MVU[0]` to perform a matrix multiplication. Note that we do not include code for transferring data into MVU's feature map and weight memory. Here we are simply assuming that the data is in the correct format and layout. The following code performs a matrix multiplication between input feature map vector of size `[1x1x1x64]` at 2-bit precision with a weight matrix of size `[1x64x64x16]` at 2-bit precision. The output result is written to `0x400` with 2-bit precision. As we mentioned in the `design` section, the controller (`pito`) configures a job by setting the appropriate CSR registers and then kick starts the job by writing into `mvucommand` CSR register. Although one can monitor the job status by polling the `mvustatus` register, MVU will send an interrupt once the job is done and ready to be read. In the following code block, we first enable global and MVU specific irq (in `enable_mvu_irq` function). We then set the address for the MVU irq handler to service the interrupt (in `__startup_code__`). We then program a matrix multiply job in `mat_mul` function. At this point, we can start prepare and configure the next job, or we can just wait for interrupt. For this simple example, we wait for an interrupt from `MVU`. Finally, if everything work as expected, we should see `OK\n` in register `a1`, `a2` and `a3` and in memory address `0x10000000`.
