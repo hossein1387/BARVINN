@@ -6,7 +6,7 @@ Examples
 Environment Setup
 -----------------------
 
-To run a neural network model using BARVINN, you will need to clone 4 different repositories:
+To run a neural network model using BARVINN, you will need to use 4 different repositories:
 
 - `BARVINN <https://github.com/hossein1387/Accelerator>`_. : The top module repo that re-uses pito and MVU project.
 - `PITO_RISCV <https://github.com/hossein1387/pito_riscv>`_. : The barrel RISC-V processor.
@@ -22,7 +22,7 @@ We have added the last three repositories as a gitmodule to BARVINN repository. 
   git submodule update --init --recursive
 
 
-As mentioned earlier, BARVINN requires RISC-V GCC that supports RV32I. You can either install RISC-V GCC with your favorite OS package manager, or you can follow `picorv32 <https://github.com/cliffordwolf/picorv32#building-a-pure-rv32i-toolchain>`_. project to build a pure RV32I toolchain.
+As mentioned earlier, BARVINN requires RISC-V GCC that supports RV32I. You can either install RISC-V GCC with your favorite OS package manager, or you can follow `picorv32 <https://github.com/cliffordwolf/picorv32#building-a-pure-rv32i-toolchain>`_. project to build a pure RV32I toolchain. The following are some of the examples that you can run on BARVINN.
 
 
 Matrix Multiplication
@@ -160,6 +160,47 @@ In this example code, we want to program `MVU[0]` to perform a matrix multiplica
       sw  a2,0(a0)
       sw  a3,0(a0)
       ebreak
+
+
+To run the code on BARVINN, we will first need to compile the above code. This source code is provided in BARVINN's `csrc directory <https://github.com/hossein1387/Accelerator/tree/master/csrc>`_. You can compile the code using the following instructions:
+
+.. code:: bash
+
+  cd matmul
+  make matmul.hex
+
+
+This will generate a hex file that should be loaded into BARVINN. Now to run th program on BARVINN, you should follow these steps:
+
+First make sure Vivado is in the PATH:
+
+.. code:: bash
+
+  source /opt/Xilinx/Vivado/2019.1/settings64.sh
+
+Then, assuming FuseSoC is already instlled, if not done already, we need to let FuseSoC know where to find PITO and MVU repos:
+
+.. code:: bash
+
+  cd BARVINN/MVU
+  fusesoc library add mvu .
+  cd ..
+  cd BARVINN/pito_riscv
+  fusesoc library add pito .
+  cd ..
+  fusesoc library add barvinn .
+
+The commands above need to be executed once so that FuseSoC registers the BARVINN, PITO and MVU project correctly. Now that FuseSoC is configured properly, we can run a FuseSoC target for BARVINN (assuming `matmul.hex` is in the current directory):
+
+
+.. code:: bash
+
+  cd ..
+  fusesoc library add barvinn .
+  fusesoc run --target=sim barvinn --firmware=matmul.hex
+
+
+By default, we have set `verification/tests/core/core_tester.sv` to run. However, once can change this by modifying `barvinn core file <https://github.com/hossein1387/Accelerator/blob/fusesoc/barvinn.core>`_ . Also, you by default, there are initial simulation values in MVU's weight and input rams. You can modify that by using different input and weight files.
 
 
 Convolution:

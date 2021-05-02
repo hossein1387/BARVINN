@@ -18,4 +18,4 @@ Editor: **MohammadHossein AskariHemmat**
    software
    fpga_prototyping
    examples
-   credits
+   acknowledgement
