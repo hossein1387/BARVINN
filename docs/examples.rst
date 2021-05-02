@@ -22,13 +22,13 @@ We have added the last three repositories as a gitmodule to BARVINN repository. 
   git submodule update --init --recursive
 
 
-As mentioned earlier, BARVINN requires RISC-V GCC that supports RV32I. You can either install RISC-V GCC with you favorite OS package manager, or you can follow `picorv32 <https://github.com/cliffordwolf/picorv32#building-a-pure-rv32i-toolchain>`_. project to build a pure RV32I toolchain.
+As mentioned earlier, BARVINN requires RISC-V GCC that supports RV32I. You can either install RISC-V GCC with your favorite OS package manager, or you can follow `picorv32 <https://github.com/cliffordwolf/picorv32#building-a-pure-rv32i-toolchain>`_. project to build a pure RV32I toolchain.
 
 
 Matrix Multiplication
 -----------------------
 
-In this example code, we want to program `MVU[0]` to perform a matrix multiplication. Note that we do not include code for transferring data into MVU's feature map and weight memory. Here we are simply assuming that the data is in the correct format and layout. The following code performs a matrix multiplication between input feature map vector of size `[1x1x1x64]` at 2-bit precision with a weight matrix of size `[1x64x64x16]` at 2-bit precision. The output result is written to `0x400` with 2-bit precision. As we mentioned in the `design` section, the controller (`pito`) configures a job by setting the appropriate CSR registers and then kick starts the job by writing into `mvucommand` CSR register. Although one can monitor the job status by polling the `mvustatus` register, MVU will send an interrupt once the job is done and ready to be read. In the following code block, we first enable global and MVU specific irq (in `enable_mvu_irq` function). We then set the address for the MVU irq handler to service the interrupt (in `__startup_code__`). We then program a matrix multiply job in `mat_mul` function. At this point, we can start prepare and configure the next job, or we can just wait for interrupt. For this simple example, we wait for an interrupt from `MVU`. Finally, if everything work as expected, we should see `OK\n` in register `a1`, `a2` and `a3` and in memory address `0x10000000`.
+In this example code, we want to program `MVU[0]` to perform a matrix multiplication. Note that we do not include code for transferring data into MVU's feature map and weight memory. Here we are simply assuming that the data is in the correct format and layout. The following code performs a matrix multiplication between input feature map vector of size `[1x1x1x64]` at 2-bit precision with a weight matrix of size `[1x64x64x16]` at 2-bit precision. The output result is written to `0x400` with 2-bit precision. As we mentioned in the `design` section, the controller (`pito`) configures a job by setting the appropriate CSR registers and then kick starts the job by writing into `mvucommand` CSR register. Although one can monitor the job status by polling the `mvustatus` register, MVU will send an interrupt once the job is done and ready to be read. In the following code block, we first enable global and MVU specific irq (in `enable_mvu_irq` function). We then set the address for the MVU irq handler to service the interrupt (in `__startup_code__`). We then program a matrix multiply job in `mat_mul` function. At this point, we can start to prepare and configure the next job, or we can just wait for an interrupt. For this simple example, we wait for an interrupt from `MVU`. Finally, if everything works as expected, we should see `OK\n` in register `a1`, `a2` and `a3` and in memory address `0x10000000`.
 
 .. code:: c
 
@@ -164,7 +164,7 @@ In this example code, we want to program `MVU[0]` to perform a matrix multiplica
 
 Convolution:
 -----------------------
-In this example code, we want to program `MVU[0]` to perform a Convolution operation. We will first start with an Onnx model. 
+In this example code, we want to program `MVU[0]` to perform a Convolution operation. We will first start with an ONNX model. 
 :numref:`resnet18_second_layer` shows that the second layer of `resnet18` on cifar100 performs a convolution with input size of `[1x64x32x32]` with a weight tensor of size `[64x64x3x3]`. The convolution parameters are illustrated by Netron in :numref:`resnet18_second_layer`. 
 
 .. figure:: _static/resnet18_second_layer.png
@@ -172,9 +172,9 @@ In this example code, we want to program `MVU[0]` to perform a Convolution opera
   :alt: Alternative text
   :name: resnet18_second_layer
 
-  Model used for Convolution example. This image shows that we are using the second conv layer of resnet18 on Cifar100. Onnx model is illustrated using Netron.
+  Model used for Convolution example. This image shows that we are using the second conv layer of resnet18 on Cifar100. ONNX model is illustrated using Netron.
 
-The model in onnx format is not suitable for MVU. As we discussed in previous sections, we have written a code generator software to take an onnx model and then provide the user with the proper MVU configuration settings. For this example, assuming we have saved this simple one layer convolution block as `SimpleConv.onnx`, we can use the code generator as below:
+The model in ONNX format is not suitable for MVU. As we discussed in previous sections, we have written a code generator software to take an ONNX model and then provide the user with the proper MVU configuration settings. For this example, assuming we have saved this simple one layer convolution block as `SimpleConv.onnx`, we can use the code generator as below:
 
 
 .. code:: python
@@ -219,7 +219,7 @@ And then execute the script above as below:
 
   python sample_mvu_code_generator.py -x SimpleConv.onnx  --aprec 8 --wprec 8 --oprec 8 --input_shape 64 32 32
 
-In the command above, we are specifying a 2 bit precision for weights, activaiton and output result. We are also specifying the input shape of the model. Here is the output for the command above:
+In the command above, we are specifying a 2 bit precision for weights, activation and output result. We are also specifying the input shape of the model. Here is the output for the command above:
 
 .. code:: bash
 
@@ -243,7 +243,7 @@ Here is what we generated after executing the command above:
 - An output hex file `output.hex`
 
 
-The generated MVU configurations can be used to write a program to configure MVU csrs. The weight hex file can be directly used in simulation using `$readmemh` to write into MVU weight rams. For verification and testing the correctness of of our design, we run the model through `OnnxRuntime` engine to capture the execution time and output results. However, since `OnnxRuntime` support only 8 bit operation, the MVU results might not be the same as `OnnxRuntime` so for now we use 8 bit precision on MVU. 
+The generated MVU configurations can be used to write a program to configure MVU csrs. The weight hex file can be directly used in simulation using `$readmemh` to write into MVU weight rams. For verification and testing the correctness of our design, we run the model through `OnnxRuntime` engine to capture the execution time and output results. However, since `OnnxRuntime` supports only 8-bit operation, the MVU results might not be the same as `OnnxRuntime` so for now we use 8 bit precision on MVU. 
 
 
 .. code:: c

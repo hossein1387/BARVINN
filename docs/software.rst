@@ -1,7 +1,7 @@
 Software Stack
 ===============
 
-As mentioned earlier, PITO is in compliant with RV32I RISC-V ISA. Hence, all the toolchains developed for RV32I can be used. However, there is still a huge gap for running a highlevel neural network model described in Pytorch, Tensorflow or ONNX on a Neural Network accelerator such as BARVINN. :numref:`sw_stack` shows how we try to close this gap. 
+As mentioned earlier, PITO is compliant with RV32I RISC-V ISA. Hence, all the toolchains developed for RV32I can be used. However, there is still a huge gap for running a high-level neural network model described in Pytorch, Tensorflow, or ONNX on a Neural Network accelerator such as BARVINN. :numref:`sw_stack` shows how we try to close this gap. 
 
 
 .. figure:: _static/sw_stack.png
@@ -13,16 +13,16 @@ As mentioned earlier, PITO is in compliant with RV32I RISC-V ISA. Hence, all the
   Software stack used in BARVINN. 
 
 
-Given a model trained in Pytorch, Tensorflow or any other machine learning framework, we first need to convert it to an ONNX model. ONNX is an open format for representing machine learning models. Using ONNX models allows us to write use single code generator module for all types of machine learning models described in any machine learning framework. 
+Given a model trained in Pytorch, Tensorflow or any other machine learning framework, we first need to convert it to an ONNX model. ONNX is an open format for representing machine learning models. Using ONNX models allows us to write use a single code generator module for all types of machine learning models described in any machine learning framework. 
 
-Before using the code generator, we should first quantize the model. Currently, model quantization is a hot reserach topic. The main goal of quantization is to reduce calculation precision while maintaining the accuracy. Quantization can be applied to a model after or while training. Quantization after training (post-training quantization) can be done statically or dynamically. In post-training static quantization, weights are quantized ahead of time and during a calibration process on the validation set, a scale and bias is computed for the activations. 
+Before using the code generator, we should first quantize the model. Currently, model quantization is a hot research topic. The main goal of quantization is to reduce calculation precision while maintaining accuracy. Quantization can be applied to a model after or while training. Quantization after training (post-training quantization) can be done statically or dynamically. In post-training static quantization, weights are quantized ahead of time and during a calibration process on the validation set, a scale and bias is computed for the activations. 
 
-In post-training dynamic quantization, much like post-trainingstatic quantization, the weights are quantized ahead of time but the activations are dynamically quantized at inference. Dynamic quantization is useful for models where model execution time is dominated by the time it takes to load weights for the model e.g LSTM. 
+In post-training dynamic quantization, much like post-training static quantization, the weights are quantized ahead of time but the activations are dynamically quantized at inference. Dynamic quantization is useful for models where model execution time is dominated by the time it takes to load weights for the model e.g LSTM. 
 
-Quantization can also be learned by the network. In quantization aware training, the quantization parameters are learned while other parameters in the network are learned. 
+Quantization can also be learned by the network. In quantization-aware training, the quantization parameters are learned while other parameters in the network are learned. 
 
 
-There are many quantization methods proposed in the litreature. However, although they are very different in traing, at inference, these methods usually use a scaling factor and clip function to quantizae the value. As an example, in Learned Step Size Quantization SK Esser, et.al (2020), the authors provided the following :numref:`lsq` computational graph:
+There are many quantization methods proposed in the literature. However, although they are very different in training, at inference, these methods usually use a scaling factor and clip function to quantize the value. As an example, in Learned Step Size Quantization SK Esser, et.al (2020), the authors provided the following :numref:`lsq` computational graph:
 
 
 .. figure:: _static/lsq.png 
@@ -33,16 +33,16 @@ There are many quantization methods proposed in the litreature. However, althoug
   Low precision computation in LSQ, this image was taken from LSQ paper SK Esser, et.al (2020).
 
 
-As it can be seen, at training time, `S_w` and `S_x` are used to first quantize both activaiton and weights. These quantized values are fed into a low precision matrix multiply block. Finally, `S_w` and `S_x` are used to rescale the result. However, at inference time, the weight qunatization can be performed offline and only activaiton quantization is necessary. In BARVINN, we added the support for such quantization methods. There are scaling factor rams in each MVU that can be programmed to hold the scaling factor.
+As it can be seen, at training time, `S_w` and `S_x` are used to first quantize both activation and weights. These quantized values are fed into a low precision matrix multiply block. Finally, `S_w` and `S_x` are used to rescale the result. However, at inference time, the weight quantization can be performed offline and only activation quantization is necessary. In BARVINN, we added support for such quantization methods. There are scaling factor rams in each MVU that can be programmed to hold the scaling factor.
 
 .. warning::
-    Currently we only support plain CNN models without any residual connections. You can refer to "Residual Distillation: Towards Portable Deep Neural Networks without Shortcuts" NeurIPS 2020 paper to learn how to train a resnet-like model and convert it into plain CNN model.
+    Currently, we only support plain CNN models without any residual connections. You can refer to "Residual Distillation: Towards Portable Deep Neural Networks without Shortcuts" NeurIPS 2020 paper to learn how to train a resnet-like model and convert it into a plain CNN model.
 
 
 Code Generator
 -----------------
 
-Once model training and quantization is done, we can export the model to ONNX format. We have provided a python library to take the onnx model and generate MVU configuration code. There are two components to map an onnx model to configuration code for MVU. We first need to parse an ONNX model and depending on the operation, break it down into matrix multiply operations. Then we need to generate configuration code for each matrix multiply. Since MVU expects the weights to be in the transposed MSB first format, we then need to reformat the weights. In BARVINN, we have provided a python library to help users map their ONNX model into a format that can be used to be executed on BARVINN. One then can use the following code to map and ONNX model into configuration code:
+Once model training and quantization are done, we can export the model to ONNX format. We have provided a python library to take the ONNX model and generate MVU configuration code. There are two components to map an ONNX model to configuration code for MVU. We first need to parse an ONNX model and depending on the operation, break it down into matrix multiply operations. Then we need to generate configuration code for each matrix multiply. Since MVU expects the weights to be in the transposed MSB first format, we then need to reformat the weights. In BARVINN, we have provided a python library to help users map their ONNX model into a format that can be used to be executed on BARVINN. One then can use the following code to map and ONNX model into configuration code:
 
 
 .. code:: python
@@ -148,4 +148,4 @@ As an example, we have used the quantized `distilled_resnet18.onnx` (available i
     Exporting input to input.hex
 
 
-As you can see, teh code generator provides a configuration for each layer of the input model. These values can be directly used in C/assebly code to program the MVU. The code generaotr also generates a weight hex file for each layer that can be used by the simulator to program the MVU rams. Finally, the code generator used the input ONNX model with OnnxRuntime engine to generate and expected results given a random input vector, both of which are also saved the generator code so that they can be used for verification purposes.
+As you can see, the code generator provides a configuration for each layer of the input model. These values can be directly used in C/assembly code to program the MVU. The code generator also generates a weight hex file for each layer that can be used by the simulator to program the MVU rams. Finally, the code generator used the input ONNX model with OnnxRuntime engine to generate and expected results given a random input vector, both of which are also saved the generator code so that they can be used for verification purposes.
