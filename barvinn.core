@@ -1,0 +1,57 @@
+CAPI=2:
+name : ::barvinn:0
+description: A Barrel RISC-V Neural Network Accelerator
+
+filesets:
+    rtl:
+        file_type: verilogSource
+        files:
+            - verilog/data_transposer.sv
+            - verilog/accelerator.sv
+        depend:
+          - fusesoc::pito
+          - fusesoc::mvu
+    tb:
+        file_type: systemVerilogSource
+        files:
+            - verification/lib/accel/accel_intf.sv:
+                is_include_file: true
+            - verification/lib/testbench/testbench_base.sv
+            - verification/lib/testbench/testbench_config.sv
+            - verification/lib/testbench/testbench_macros.svh:
+                is_include_file: true
+            - verification/tests/core/core_tester.sv:
+                is_include_file: true
+            - verification/lib/testbench/testbench_top.sv
+        depend:
+          - fusesoc::pito
+          - fusesoc::mvu
+targets:
+    sim:
+        default_tool: xsim 
+        filesets:
+            - tb
+            - rtl
+        description: Simulate the design
+        tools: 
+            xsim:
+                xelab_options: [--debug, typical, -L, secureip, -L, unisims_ver, -L, unimacro_ver, -L, work.glbl, -L, blk_mem_gen_v8_4_3, --timescale, 1ns/1ps]
+        parameters: [XILINX]
+        toplevel: testbench_top
+    synth:
+        description: Synthesize the design for an FPGA board
+        filesets:
+            - synth
+            - synth_xilinx
+        default_tool: vivado
+        tools:
+          vivado:
+            part: xcku115-flva1517-2-e
+            pnr: none
+        parameters: [XILINX]
+        toplevel: [accelerator]
+parameters:
+    XILINX:
+        datatype  : int
+        default   : 1
+        paramtype : vlogdefine
