@@ -1,4 +1,4 @@
-interface accel_interface(input logic clk);
+interface barvinn_intf(input logic clk);
     import mvu_pkg::*;
     import rv32_pkg::*;
     import pito_pkg::*;
