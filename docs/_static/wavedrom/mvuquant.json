@@ -1,0 +1,5 @@
+ [
+  {"bits": 5},
+  {"bits": 6, "name":"MSB Idx", "attr":"RW"},
+  {"bits": 21, "name":"Reserved", "attr":"RO"}
+]

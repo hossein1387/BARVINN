@@ -1,0 +1,9 @@
+ [
+  {"bits": 6, "name":"Weight Precision", "attr":"RW"},
+  {"bits": 6, "name":"Input Precision", "attr":"RW"},
+  {"bits": 6, "name":"Output Precision", "attr":"RW"},
+  {"bits": 6},
+  {"bits": 1, "attr":"RW", "name": "wsign"},
+  {"bits": 1, "attr":"RW", "name": "isign"},
+  {"bits": 6}
+]

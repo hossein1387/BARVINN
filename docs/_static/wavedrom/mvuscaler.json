@@ -1,0 +1,4 @@
+ [
+  {"bits": 16, "name":"Fixed Point Scaler", "attr":"RW"},
+  {"bits": 16}
+]
