@@ -1,0 +1,5 @@
+ [
+  {"bits": 8, "name":"sh/acc on jump", "attr":"RW"},
+  {"bits": 9, "name":"pool/ac on jump", "attr":"RW"},
+  {"bits": 15}
+]

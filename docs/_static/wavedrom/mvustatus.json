@@ -1,0 +1,4 @@
+ [
+  {"bits": 1, "name":"MVU status", "attr":"RO"},
+  {"bits": 31}
+]
