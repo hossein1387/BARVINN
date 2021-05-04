@@ -3,8 +3,8 @@ Design
 
 BARVINN
 -----------------
-BARVINN is a Barrel RISC-V Neural Network Accelerator. The main purpose of designing BARVINN was to fill the need for arbitrary precision neural network acceleration. The overall architecture of BARVINN is illustrated below:
-BARVINN is an FPGA-proven accelerator. :numref:`fig_barvinn_top` illustrates the overall system design for BARVINN. It is consist of the following components:
+BARVINN is a Barrel RISC-V Neural Network Accelerator. The main purpose of designing BARVINN is to fill the need for arbitrary precision neural network acceleration. The overall architecture of BARVINN is illustrated below.
+BARVINN is implemented in an FPGA. :numref:`fig_barvinn_top` illustrates the overall system design for BARVINN. It is consist of the following components:
 
 - Array of Matrix Vector Units
 - RISC-V Controller Core
@@ -25,9 +25,9 @@ In the following sections, we will review each part in details.
 Matrix Vector Unit (MVU) Array
 ------------------------------
 
-In the base configuration, BARVINN uses 8 MVUs. At every clock cycle, each MVU is capable of performing a ternary matrix-vector product of the following size:
+In the base configuration, BARVINN uses 8 MVUs. At every clock cycle, each MVU is capable of performing a binary matrix-vector product of the following size:
 
-- Input Vector of 1 x 64 with 2 bit precision
+- Input Vector of 1 x 64 with 1 bit precision
 - Weight Matrix of 64 x 64 with 1 bit precision
 
 Each MVU has a local memory to store activation and weights. The MVUs are connected through a crossbar. The crossbar allows MVUs to send part of their local memory (activations) among themselves. This allows MVUs to work on different jobs with different configurations or to work together to compute a single task. 
@@ -40,10 +40,10 @@ Each MVU has a local memory to store activation and weights. The MVUs are connec
   This figure illustrates an MVU block diagram.
 
 
-:numref:`mvu_arch` illustrates the block diagram of an MVU. Each MVU is consist of a Matrix Vector Product unit (MVP), Collision Detection Read Unit (CDRU), Collision Detection Write Unit (CDWU), activation ram, weight ram and a set of machine learning specific blocks such as quantizers, scaler units and pooling unit that can be switched on or off (technically, data will pass through all of these blocks and the user should provide proper configuration to bypass the functionality. For instance for `scaler` unit, if there is no need to scale the output, the user should write `1s` in scaler rams) depending on the job configuration. As it can be seen in :numref:`mvu_arch`, at each clock cycle, an MVU word (64 bits) is read from the activation ram. At the same time, a long word of 4096 bits (64 by 64 ) is read from weight ram. This is then fed into MVP unit which can perform matrix-vector product in one clock cycle. Depending on the precision configuration register (take a look at MVU_CSR_REG_TABLE_ for detailed register configuration for each MVU), multiple words will be read from weight and data memory to perform bit-serial multiplication.
+:numref:`mvu_arch` illustrates the block diagram of an MVU. Each MVU is consist of a Matrix Vector Product unit (MVP), Collision Detection Read Unit (CDRU), Collision Detection Write Unit (CDWU), activation RAM, weight RAM and a set of machine learning specific blocks such as quantizers, scaler units and pooling unit that can be switched on or off (technically, data will pass through all of these blocks and the user should provide proper configuration to bypass the functionality. For instance for `scaler` unit, if there is no need to scale the output, the user should write `1s` in scaler RAMs) depending on the job configuration. As it can be seen in :numref:`mvu_arch`, at each clock cycle, an MVU word (64 bits) is read from the activation RAM. At the same time, a long word of 4096 bits (64 by 64 ) is read from weight RAM. This is then fed into MVP unit which can perform one binary matrix-vector product each clock cycle. Depending on the precision configuration register (take a look at MVU_CSR_REG_TABLE_ for detailed register configuration for each MVU), multiple words will be read from weight and data memory to perform bit-serial multiplication.
 
 
-:numref:`mvu_bit_slice` illustrates bit-serial operation in MVU. As it can be seen, an MVU data word of size 64 bit is read from data ram. This will be fed into 64 bit-serial multiplication blocks. Each of these blocks performs a dot product between the two vectors. :numref:`mvu_bit_slice` shows only one bit-slice operation in the MVU, however, in reality, there are 64 modules that perform the same task on input data but with different weight vectors. For more information on MVU bit-serial operation, please refer to "Bit-Slicing FPGA Accelerator for Quantized Neural Networks" by O. Bilaniu et al.
+:numref:`mvu_bit_slice` illustrates bit-serial operation in MVU. As it can be seen, an MVU data word of size 64 bit is read from data RAM. This will be fed into 64 bit-serial multiplication blocks. Each of these blocks performs a dot product between the two vectors. :numref:`mvu_bit_slice` shows only one bit-slice operation in the MVU, however, in reality, there are 64 modules that perform the same task on input data but with different weight vectors. For more information on MVU bit-serial operation, please refer to "Bit-Slicing FPGA Accelerator for Quantized Neural Networks" by O. Bilaniu et al.
 
 
 .. figure:: _static/mvu_bitslice_ops.png
@@ -53,7 +53,7 @@ Each MVU has a local memory to store activation and weights. The MVUs are connec
 
   Bit serial operation in MVU.
 
-As we mentioned before, the MVU is capable of performing computation with different bit precision. The way we achieve this task is by storing values in MSB transposed format in memory. This format of saving data in memory allows MVU to read-only as many words as the operand precision specifies. Since all the computations are happening in this format, the user should not worry about memory layout except when it wants to read results or write inputs (such as input image) into MVU rams. To solve this issue, there is a data transposer module that transposes the data to the correct format. Data transposer's job is to write input data (that is stored in a processor RAM in linear format) into MVU RAM in a transposed format. The input word can be packed with 2, 4, 8 or 16 bits of data. Given the input data precision (prec) the transposer will unpack, transpose and store them in the correct format. Once the MVU word is prepared, data tranposer will go into `BUSY` state in which it will ignore any incoming new input  data. At this point, the transposed data will be written into MVU word. Once complete, it will go back into `IDLE` state and it will wait for a new posedge on start signal to start the process all over again.
+As we mentioned before, the MVU is capable of performing computation with different bit precision. The way we achieve this task is by storing values in MSB transposed format in memory. This format of saving data in memory allows MVU to read-only as many words as the operand precision specifies. Since all the computations are happening in this format, the user should not worry about memory layout except when it wants to read results or write inputs (such as input image) into MVU RAMs. To solve this issue, there is a data transposer module that transposes the data to the correct format. Data transposer's job is to write input data (that is stored in a processor RAM in linear format) into MVU RAM in a transposed format. The input word can be packed with 2, 4, 8 or 16 bits of data. Given the input data precision (prec) the transposer will unpack, transpose and store them in the correct format. Once the MVU word is prepared, data tranposer will go into `BUSY` state in which it will ignore any incoming new input  data. At this point, the transposed data will be written into MVU word. Once complete, it will go back into `IDLE` state and it will wait for a new posedge on start signal to start the process all over again.
  
 .. figure:: _static/Data_transposer.png
   :width: 800
@@ -124,7 +124,31 @@ The memory layout described in previous sections allows MVU to efficiently compu
   Sliding window operation to perform Convolution. 
 
 
-As you can see in :numref:`slide_window_valid` , if we just slide the weight tensor over input, not all dot products are valid. Luckily, for a given stride, padding and weight shape, we can pre-compute which memory locations should be accessed by the MVU. We took advantage of this fact and have provided a set of `jump` settings for input and weight tensors. :numref:`feature_map_jump_schedule` and :numref:`weight_jump_schedule` illustrates what each jump configuration is:
+As you can see in :numref:`slide_window_valid`, if we just slide the weight tensor over input, not all dot products are valid. Luckily, for a given stride, padding and weight shape, we can pre-compute the pattern of memory accesses by the MVU to compute an operation such as GEMV or convolution. Each MVU includes address generators that can be programmed to implement a series of nested loops that can be used to move across the input data and weight tensors. Address generators have a set of `length` parameters that set the bounds of each nested loop, and a set of associated address `jump` (`jX`) parameters that are used to compute the next memory address to move to in a given loop. This is illustrated in the following pseudocode:
+
+.. code-block:: C
+
+  while (1) {
+    for (i1 = length1; i1 > 0; i1--) 
+    {
+      for (i2 = length2; i2 > 0; i2--) 
+      {
+        for (i3 = length3; i3 > 0; i3--) 
+        {
+          for (i4 = length4; i4 > 0; i4--) 
+          {    
+            addr_out += j4;
+          }
+          addr_out += j3;
+        }
+        addr_out += j2;
+      }
+      addr_out += j1;
+    }
+    addr_out += j0;
+  }
+
+For a 2D convolution operation, :numref:`feature_map_jump_schedule` and :numref:`weight_jump_schedule` illustrates what each jump configuration is:
 
 .. figure:: _static/feature_map_jump_schedule.png
   :width: 800
@@ -135,11 +159,11 @@ As you can see in :numref:`slide_window_valid` , if we just slide the weight ten
 
 For inputs we have the following configurable `jump` variables:
 
-- `j0`:  aka `iprec`, jump over precison (implicit).
-- `j1`: `ijump0` Specifies if we have reached window width, if so, move to the next row in the window.
-- `j2`: `ijump1` Specifies if we have reached window height and width, if so, move back to window start for next precision combo or next filter set (i.e. for same output (x,y), start computing next output channel block).
-- `j3`: `ijump2` Specifies if we have finished all filter sets in the window and done output (x,y). Slide window by horizontal stride. Start output (x+1, y). Note that the diagram shows a horizontal stride of 1.
-- `j4`: ijump3: Copy ijump2 since only 4 jumps are needed.
+- `j3`: jump over precision length for input data (i.e. set to `iprec`).
+- `j2`: Specifies if we have reached window width, if so, move to the next row in the window.
+- `j1`: Specifies if we have reached window height and width, if so, move back to window start for next precision combo or next filter set (i.e. for same output (x,y), start computing next output channel block).
+- `j0`: Specifies if we have finished all filter sets in the window and done output (x,y). Slide window by horizontal stride. Start output (x+1, y). Note that the diagram shows a horizontal stride of 1.
+- `j4`: not applicable.
 
 
 
@@ -150,11 +174,11 @@ For inputs we have the following configurable `jump` variables:
 
   Weight jump schedule.
 
-- `j0`: aka `wprecision`, jump over precison (implicit).
-- `j1`: `wjump0` Specifies if we have reached window width and height, if so, move back to filter start for next precision combo.
-- `j2`: `wjump1` Specifies if we have finished all bit combos for the current filter set and channel block for output (x,y) and if so, move to the next filter set and compute the next channel block for output (x,y).
-- `j3`: `wjump2`: Specifies if we have finished all filter sets and channel blocks for output (x,y) and if so, move back to the start of the first filter set for the next window and output (x+1, y).
-- `j4`: `wjump3` Copy wjump2 since only 4 jumps are needed.
+- `j3`: jump over precison length for weights (i.e. set to `wprecision`).
+- `j2`: Specifies if we have reached window width and height, if so, move back to filter start for next precision combo.
+- `j1`: Specifies if we have finished all bit combos for the current filter set and channel block for output (x,y) and if so, move to the next filter set and compute the next channel block for output (x,y).
+- `j0`: Specifies if we have finished all filter sets and channel blocks for output (x,y) and if so, move back to the start of the first filter set for the next window and output (x+1, y).
+- `j4`: not applicable.
 
 
 In general, each MVU has 44 configurable registers that can be used in the software. Section :ref:`Control Status Registers` provides details of each register. 
@@ -189,7 +213,7 @@ We adopted a Harvard architecture and divided the instruction and data cache. In
 
 
 
-The hart scheduler itself uses a strict round-robin algorithm. No preemption and priority is implemented and every hart is given a fixed amount of time slots for execution. Figure 4.3a shows how harts are scheduled for execution in our design. Considering the execution for Hart[0], it takes 5 clock cycles for an instruction to be completed. After the 5th clock tick, no more processing associated with Hart[0] is performed. The next three slots are given to Hart[5], Hart[6] and Hart[7]. Thus each hart executes an instruction every 8th cycle of the main clock. Hence the CPI of 8. From the perspective of the main CPU, the throughput is one instruction per clock cycle. From the perspective of each hart, we are running at an 8th of the main clock speed with a CPI of 1.
+The hart scheduler itself uses a strict round-robin algorithm. No preemption or priority is implemented and every hart is given a fixed amount of time slots for execution. Figure 4.3a shows how harts are scheduled for execution in our design. Considering the execution for Hart[0], it takes 5 clock cycles for an instruction to be completed. After the 5th clock tick, no more processing associated with Hart[0] is performed. The next three slots are given to Hart[5], Hart[6] and Hart[7]. Thus each hart executes an instruction every 8th cycle of the main clock. Hence the CPI of 8. From the perspective of the main CPU, the throughput is one instruction per clock cycle. From the perspective of each hart, we are running at an 8th of the main clock speed with a CPI of 1.
 
 PITO is compatible with RV32I RISC-V ISA. In fact, PITO passes all the RISC-V tests, confirming that it is compliant with the RV32I ISA. In addition to base CSRs (refer to :ref:`RV32_CSR_REG_TABLE` for details) and to specialize PITO for our accelerator, we have added 44 MVU specific CSRs. In Section :ref:`examples`, we have provided example codes to program these CSRs to submit a job to MVU. 
 
