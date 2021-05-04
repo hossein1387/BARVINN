@@ -1,6 +1,6 @@
 # BARVINN: A Barrel RISC-V Neural Network Accelerator:
 
-![alt text](https://github.com/hossein1387/BARVINN/blob/documentation/docs/_static/BARVINN_LOGO.png)
+![alt text](https://github.com/hossein1387/BARVINN/blob/master/docs/_static/BARVINN_LOGO.png)
 
 ## How to Use:
     
