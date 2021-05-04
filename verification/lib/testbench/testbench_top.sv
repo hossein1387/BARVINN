@@ -10,8 +10,8 @@ module testbench_top();
     logic clk;
     pito_interface pito_inf(clk);
     mvu_interface mvu_inf(clk);
-    accel_interface accel_inf(clk);
-    accelerator accel(.rv_intf(pito_inf),
+    accel_interface barvinn_inf(clk);
+    barvinn barvinn_inst(.rv_intf(pito_inf),
                       .mvu_intf(mvu_inf),
                       .accel_inf(accel_inf));
 

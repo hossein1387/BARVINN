@@ -4,7 +4,7 @@
 // hard coded HDL paths for verification 
 //================================================================
  
-`define hdl_path_top testbench_top.accel.pito_rv32_core
+`define hdl_path_top testbench_top.barvinn_inst.pito_rv32_core
 `define hdl_path_regf `hdl_path_top.regfile.genblk1
 `define hdl_path_regf_0 `hdl_path_regf[0].regfile.data
 `define hdl_path_regf_1 `hdl_path_regf[1].regfile.data

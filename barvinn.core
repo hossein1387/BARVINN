@@ -7,14 +7,14 @@ filesets:
         file_type: verilogSource
         files:
             - verilog/data_transposer.sv
-            - verilog/accelerator.sv
+            - verilog/barvinn.sv
         depend:
           - fusesoc::pito
           - fusesoc::mvu
     tb:
         file_type: systemVerilogSource
         files:
-            - verification/lib/accel/accel_intf.sv:
+            - verification/lib/barvinn/barvinn_intf.sv:
                 is_include_file: true
             - verification/lib/testbench/testbench_base.sv
             - verification/lib/testbench/testbench_config.sv
@@ -49,7 +49,7 @@ targets:
             part: xcku115-flva1517-2-e
             pnr: none
         parameters: [XILINX]
-        toplevel: [accelerator]
+        toplevel: [barvinn]
 parameters:
     XILINX:
         datatype  : int

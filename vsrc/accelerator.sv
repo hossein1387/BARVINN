@@ -2,7 +2,7 @@
 import mvu_pkg::*;
 import rv32_pkg::*;
 
-module accelerator #(
+module barvinn #(
 )(
 
     //=======================================
@@ -16,7 +16,7 @@ module accelerator #(
     //=======================================
     //          Accelerator Interface
     //=======================================
-    accel_interface barvinn_intf
+    barvinn_interface barvinn_intf
 );
     localparam MVU_MAX_DATA_PREC      = 1;  // Maximum supported data length in MVU
 
