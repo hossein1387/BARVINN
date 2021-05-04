@@ -200,7 +200,7 @@ The commands above need to be executed once so that FuseSoC registers the BARVIN
   fusesoc run --target=sim barvinn --firmware=matmul.hex
 
 
-By default, we have set `verification/tests/core/core_tester.sv` to run. However, once can change this by modifying `barvinn core file <https://github.com/hossein1387/Accelerator/blob/fusesoc/barvinn.core>`_ . Also, you by default, there are initial simulation values in MVU's weight and input rams. You can modify that by using different input and weight files.
+By default, we have set `verification/tests/core/core_tester.sv` to run. However, one can change this by modifying `barvinn core file <https://github.com/hossein1387/Accelerator/blob/fusesoc/barvinn.core>`_ . Also, you by default, there are initial simulation values in MVU's weight and input rams. You can modify that by using different input and weight files.
 
 
 Convolution:
