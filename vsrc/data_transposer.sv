@@ -42,8 +42,8 @@
 module data_transposer #(
     parameter  NUM_WORDS    =  64,   // Number of words needed before transpose 
     parameter  XLEN         =  32,   // Length of each input word
-    parameter  MVU_ADDR_LEN =  32,   // MVU address length
-    parameter  MVU_DATA_LEN =  32,   // MVU data length
+    parameter  MVU_ADDR_LEN =  15,   // MVU address length
+    parameter  MVU_DATA_LEN =  64,   // MVU data length
     parameter  MAX_DATA_PREC=  16     // MAX data precision
 )(
     input  logic                      clk,         // Clock

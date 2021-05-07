@@ -1,3 +1,8 @@
+`include "rv32_defines.svh"
+`include "testbench_macros.svh"
+`include "testbench_config.sv"
+`include "pito_monitor.sv"
+
 import utils::*;
 import rv32_pkg::*;
 import rv32_utils::*;

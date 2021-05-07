@@ -1,4 +1,10 @@
 `timescale 1ns/1ps
+
+`include "rv32_defines.svh"
+`include "pito_inf.svh"
+`include "mvu_inf.svh"
+`include "barvinn_intf.sv"
+
 import mvu_pkg::*;
 import rv32_pkg::*;
 
@@ -18,7 +24,7 @@ module barvinn #(
     //=======================================
     barvinn_interface barvinn_intf
 );
-    localparam MVU_MAX_DATA_PREC      = 1;  // Maximum supported data length in MVU
+    localparam MVU_MAX_DATA_PREC      = 16;  // Maximum supported data length in MVU
 
     // mvu done signal, not used for now
     logic [        NMVU-1  : 0] mvu_done        ; // mvu output done signal
@@ -26,10 +32,9 @@ module barvinn #(
 
     // connecting global reset
     assign mvu_intf.rst_n         = barvinn_intf.rst_n;
-    assign mvu_intf.rst_n         = brvinn_intf.rst_n;
+    assign mvu_intf.rst_n         = barvinn_intf.rst_n;
 
     assign mvu_intf.ic_clr        = barvinn_intf.rst_n;
-    assign mvu_irq_tap
     // assign mvu_ic_recv_from  = 0;
 
 genvar mvu_cnt;
@@ -55,33 +60,33 @@ generate
         assign mvu_intf.ibaseaddr[mvu_cnt*BBDADDR +: BBDADDR]     = pito_intf.csr_mvuibaseptr[mvu_cnt*32 +: BBDADDR];
         assign mvu_intf.obaseaddr[mvu_cnt*BBDADDR +: BBDADDR]     = pito_intf.csr_mvuobaseptr[mvu_cnt*32 +: BBDADDR];
         assign mvu_intf.omvusel                                   = 8'b00000001;
-        assign mvu_intf.wjump[0]                                  = pito_intf.csr_mvuwjump_0[mvu_cnt*32 +: BJUMP];
-        assign mvu_intf.wjump[1]                                  = pito_intf.csr_mvuwjump_1[mvu_cnt*32 +: BJUMP];
-        assign mvu_intf.wjump[2]                                  = pito_intf.csr_mvuwjump_2[mvu_cnt*32 +: BJUMP];
-        assign mvu_intf.wjump[3]                                  = pito_intf.csr_mvuwjump_3[mvu_cnt*32 +: BJUMP];
-        assign mvu_intf.wjump[4]                                  = pito_intf.csr_mvuwjump_4[mvu_cnt*32 +: BJUMP];
-        assign mvu_intf.ijump[0]                                  = pito_intf.csr_mvuijump_0[mvu_cnt*32 +: BJUMP];
-        assign mvu_intf.ijump[1]                                  = pito_intf.csr_mvuijump_1[mvu_cnt*32 +: BJUMP];
-        assign mvu_intf.ijump[2]                                  = pito_intf.csr_mvuijump_2[mvu_cnt*32 +: BJUMP];
-        assign mvu_intf.ijump[3]                                  = pito_intf.csr_mvuijump_3[mvu_cnt*32 +: BJUMP];
-        assign mvu_intf.ijump[4]                                  = pito_intf.csr_mvuijump_4[mvu_cnt*32 +: BJUMP];
-        assign mvu_intf.ojump[0]                                  = pito_intf.csr_mvuojump_0[mvu_cnt*32 +: BJUMP];
-        assign mvu_intf.ojump[1]                                  = pito_intf.csr_mvuojump_1[mvu_cnt*32 +: BJUMP];
-        assign mvu_intf.ojump[2]                                  = pito_intf.csr_mvuojump_2[mvu_cnt*32 +: BJUMP];
-        assign mvu_intf.ojump[3]                                  = pito_intf.csr_mvuojump_3[mvu_cnt*32 +: BJUMP];
-        assign mvu_intf.ojump[4]                                  = pito_intf.csr_mvuojump_4[mvu_cnt*32 +: BJUMP];
-        assign mvu_intf.wlength[1]                                = pito_intf.csr_mvuwlength_1[mvu_cnt*32 +: BLENGTH];
-        assign mvu_intf.wlength[2]                                = pito_intf.csr_mvuwlength_2[mvu_cnt*32 +: BLENGTH];
-        assign mvu_intf.wlength[3]                                = pito_intf.csr_mvuwlength_3[mvu_cnt*32 +: BLENGTH];
-        assign mvu_intf.wlength[4]                                = pito_intf.csr_mvuwlength_4[mvu_cnt*32 +: BLENGTH];
-        assign mvu_intf.ilength[1]                                = pito_intf.csr_mvuilength_1[mvu_cnt*32 +: BLENGTH];
-        assign mvu_intf.ilength[2]                                = pito_intf.csr_mvuilength_2[mvu_cnt*32 +: BLENGTH];
-        assign mvu_intf.ilength[3]                                = pito_intf.csr_mvuilength_3[mvu_cnt*32 +: BLENGTH];
-        assign mvu_intf.ilength[4]                                = pito_intf.csr_mvuilength_4[mvu_cnt*32 +: BLENGTH];
-        assign mvu_intf.olength[1]                                = pito_intf.csr_mvuolength_1[mvu_cnt*32 +: BLENGTH];
-        assign mvu_intf.olength[2]                                = pito_intf.csr_mvuolength_2[mvu_cnt*32 +: BLENGTH];
-        assign mvu_intf.olength[3]                                = pito_intf.csr_mvuolength_3[mvu_cnt*32 +: BLENGTH];
-        assign mvu_intf.olength[4]                                = pito_intf.csr_mvuolength_4[mvu_cnt*32 +: BLENGTH];
+        assign mvu_intf.wjump[mvu_cnt][0]                         = pito_intf.csr_mvuwjump_0[mvu_cnt*32 +: BJUMP];
+        assign mvu_intf.wjump[mvu_cnt][1]                         = pito_intf.csr_mvuwjump_1[mvu_cnt*32 +: BJUMP];
+        assign mvu_intf.wjump[mvu_cnt][2]                         = pito_intf.csr_mvuwjump_2[mvu_cnt*32 +: BJUMP];
+        assign mvu_intf.wjump[mvu_cnt][3]                         = pito_intf.csr_mvuwjump_3[mvu_cnt*32 +: BJUMP];
+        assign mvu_intf.wjump[mvu_cnt][4]                         = pito_intf.csr_mvuwjump_4[mvu_cnt*32 +: BJUMP];
+        assign mvu_intf.ijump[mvu_cnt][0]                         = pito_intf.csr_mvuijump_0[mvu_cnt*32 +: BJUMP];
+        assign mvu_intf.ijump[mvu_cnt][1]                         = pito_intf.csr_mvuijump_1[mvu_cnt*32 +: BJUMP];
+        assign mvu_intf.ijump[mvu_cnt][2]                         = pito_intf.csr_mvuijump_2[mvu_cnt*32 +: BJUMP];
+        assign mvu_intf.ijump[mvu_cnt][3]                         = pito_intf.csr_mvuijump_3[mvu_cnt*32 +: BJUMP];
+        assign mvu_intf.ijump[mvu_cnt][4]                         = pito_intf.csr_mvuijump_4[mvu_cnt*32 +: BJUMP];
+        assign mvu_intf.ojump[mvu_cnt][0]                         = pito_intf.csr_mvuojump_0[mvu_cnt*32 +: BJUMP];
+        assign mvu_intf.ojump[mvu_cnt][1]                         = pito_intf.csr_mvuojump_1[mvu_cnt*32 +: BJUMP];
+        assign mvu_intf.ojump[mvu_cnt][2]                         = pito_intf.csr_mvuojump_2[mvu_cnt*32 +: BJUMP];
+        assign mvu_intf.ojump[mvu_cnt][3]                         = pito_intf.csr_mvuojump_3[mvu_cnt*32 +: BJUMP];
+        assign mvu_intf.ojump[mvu_cnt][4]                         = pito_intf.csr_mvuojump_4[mvu_cnt*32 +: BJUMP];
+        assign mvu_intf.wlength[mvu_cnt][1]                       = pito_intf.csr_mvuwlength_1[mvu_cnt*32 +: BLENGTH];
+        assign mvu_intf.wlength[mvu_cnt][2]                       = pito_intf.csr_mvuwlength_2[mvu_cnt*32 +: BLENGTH];
+        assign mvu_intf.wlength[mvu_cnt][3]                       = pito_intf.csr_mvuwlength_3[mvu_cnt*32 +: BLENGTH];
+        assign mvu_intf.wlength[mvu_cnt][4]                       = pito_intf.csr_mvuwlength_4[mvu_cnt*32 +: BLENGTH];
+        assign mvu_intf.ilength[mvu_cnt][1]                       = pito_intf.csr_mvuilength_1[mvu_cnt*32 +: BLENGTH];
+        assign mvu_intf.ilength[mvu_cnt][2]                       = pito_intf.csr_mvuilength_2[mvu_cnt*32 +: BLENGTH];
+        assign mvu_intf.ilength[mvu_cnt][3]                       = pito_intf.csr_mvuilength_3[mvu_cnt*32 +: BLENGTH];
+        assign mvu_intf.ilength[mvu_cnt][4]                       = pito_intf.csr_mvuilength_4[mvu_cnt*32 +: BLENGTH];
+        assign mvu_intf.olength[mvu_cnt][1]                       = pito_intf.csr_mvuolength_1[mvu_cnt*32 +: BLENGTH];
+        assign mvu_intf.olength[mvu_cnt][2]                       = pito_intf.csr_mvuolength_2[mvu_cnt*32 +: BLENGTH];
+        assign mvu_intf.olength[mvu_cnt][3]                       = pito_intf.csr_mvuolength_3[mvu_cnt*32 +: BLENGTH];
+        assign mvu_intf.olength[mvu_cnt][4]                       = pito_intf.csr_mvuolength_4[mvu_cnt*32 +: BLENGTH];
         assign mvu_intf.scaler_b[mvu_cnt]                         = {BSCALERB{1'b1}};
         assign mvu_intf.shacc_load_sel[mvu_cnt]                   = {NJUMPS{1'b1}}; 
         assign mvu_intf.zigzag_step_sel[mvu_cnt]                  = {NJUMPS{1'b1}}; 
@@ -120,8 +125,8 @@ endgenerate
                    .start       (barvinn_intf.mvu_data_start[mvu_cnt]                     ), // Start signal to indicate first word to be transposed
                    .busy        (barvinn_intf.mvu_data_busy[mvu_cnt]                      ), // A signal to indicate the status of the module
                    .mvu_wr_en   (mvu_intf.wrc_en[mvu_cnt]                                 ), // MVU write enable to input RAM
-                   .mvu_wr_addr (mvu_intf.wrc_addr[mvu_cnt*BDBANKA +: BDBANKA]            ), // MVU write address to input RAM
-                   .mvu_wr_word (mvu_intf.wrc_word[mvu_cnt*BDBANKW +: BDBANKW]            )  // MVU write data to input RAM
+                   .mvu_wr_addr (mvu_intf.wrc_addr                                        ), // MVU write address to input RAM
+                   .mvu_wr_word (mvu_intf.wrc_word                                        )  // MVU write data to input RAM
             );
         end
     endgenerate
