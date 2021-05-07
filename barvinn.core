@@ -49,7 +49,7 @@ targets:
             part: xcku115-flva1517-2-e
             pnr: none
         parameters: [XILINX]
-        toplevel: [accelerator]
+        toplevel: [barvinn]
 parameters:
     XILINX:
         datatype  : int
