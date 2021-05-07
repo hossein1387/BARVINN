@@ -16,8 +16,8 @@ interface barvinn_interface(input logic clk);
     //=======================================
     //          Data Transposer Interface
     //=======================================
-    logic [         NMVU*31 : 0]  mvu_data_prec;
-    logic [         NMVU*31 : 0]  mvu_data_baddr;
+    logic [       NMVU*32-1 : 0]  mvu_data_prec;
+    logic [       NMVU*32-1 : 0]  mvu_data_baddr;
     logic [ NMVU*`XPR_LEN-1 : 0]  mvu_data_iword;
     logic [          NMVU-1 : 0]  mvu_data_start;
     logic [          NMVU-1 : 0]  mvu_data_busy;
