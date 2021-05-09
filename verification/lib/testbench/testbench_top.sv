@@ -1,6 +1,8 @@
-import utils::*;
+`include "pito_inf.svh"
+`include "core_tester.sv"
 
-module testbench_top();
+
+module testbench_top import utils::*;();
 //==================================================================================================
 // Test variables
     localparam CLOCK_SPEED = 50; // 10MHZ
@@ -8,19 +10,19 @@ module testbench_top();
     string sim_log_file = "testbench_top.log";
 //==================================================================================================
     logic clk;
-    pito_interface pito_inf(clk);
-    mvu_interface mvu_inf(clk);
-    accel_interface accel_inf(clk);
-    accelerator accel(.rv_intf(pito_inf),
-                      .mvu_intf(mvu_inf),
-                      .accel_inf(accel_inf));
+    pito_interface pito_intf(clk);
+    mvu_interface mvu_intf(clk);
+    barvinn_interface barvinn_intf(clk);
+    barvinn barvinn_inst(.pito_intf(pito_intf),
+                      .mvu_intf(mvu_intf),
+                      .barvinn_intf(barvinn_intf));
 
     // interface_tester tb;
     core_tester tb;
 
     initial begin
         logger = new(sim_log_file);
-        tb = new(logger, pito_inf.tb_interface);
+        tb = new(logger, pito_intf.tb_interface);
 
         tb.tb_setup();
         tb.run();
