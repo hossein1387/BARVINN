@@ -51,7 +51,10 @@ This should open the project for you. Make sure you have run simulation or synth
 project file for you.
 
 
-## Build Documentation:
+## Documentation:
+
+BARVINN documentation is available in [docs/](https://github.com/hossein1387/BARVINN/tree/master/docs) folder. However, you can follow this url for an online version of documentation hosted on readthedocs. This url will ocassionally gets updated. You can build the lates docs using the following:
+
 
     cd docs
     python pip -r install requirements
