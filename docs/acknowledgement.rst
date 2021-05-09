@@ -8,14 +8,6 @@ This project was financially supported by the following organizations:
   :alt: Alternative text
   :target: https://www.cmc.ca/
 
-
-IBM 
-.. .. figure:: _static/ibm.png
-..   :width: 200
-..   :alt: Alternative text
-..   :target: https://www.IBM.com/
-
-
 .. figure:: _static/MILA.png
   :width: 200
   :alt: Alternative text

@@ -1,7 +1,7 @@
 Verification
 ============
 
-To verify the functionality of our design, we have created a verification environment. We used Viavdos support for Systemverilog. Although UVM verification was a much better choice to start with, however, when we started the project, there was no support for UVM in Vivado. Currently, Vivado 2020 supports UVM based verification but our verification is still based on a simple class-based verification. In the following sections, we provide an overview of what has been implemented. Also, we will review how new tests can be added and how to run simulations.
+To verify the functionality of our design, we have created a verification environment. We used Vivado's support for Systemverilog. Although UVM verification was a much better choice to start with, however, when we started the project, there was no support for UVM in Vivado. Currently, Vivado 2020 supports UVM based verification but our verification is still based on a simple class-based verification. In the following sections, we provide an overview of what has been implemented. Also, we will review how new tests can be added and how to run simulations.
 
 Verification Environement
 --------------------------

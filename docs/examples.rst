@@ -110,43 +110,50 @@ In this example code, we want to program `MVU[0]` to perform a matrix multiplica
       add   x1, x1, x3
       csrw  mvu_precision,  x1
 
-      csrwi mvu_quant     , 10       // set quant_msbidx to 10
-      csrwi mvu_wbaseaddr , 0        // set weight address to 0
-      csrwi mvu_ibaseaddr , 0        // set input address to 0
+      csrwi mvuquant     , 10       // set quant_msbidx to 10
+      csrwi mvuwbaseptr  , 0        // set weight address to 0
+      csrwi mvuibaseptr  , 0        // set input address to 0
 
       addi  x1, x0, 1
       slli  x1, x1, 10               // set output address to 0x400
-      csrw mvu_obaseaddr , x1
+      csrw mvuobaseptr , x1
 
-      csrwi mvu_wstride_0 , 30       // 1 tile back move x 2 bits
-      csrwi mvu_wstride_1 ,  2       // 1 tile ahead move x 2 bits
-      csrwi mvu_wstride_2 ,  0 
-      csrwi mvu_wstride_3 ,  0
-      csrwi mvu_istride_0 , 30       // 1 tile back move x 2 bits 
-      csrwi mvu_istride_1 ,  0 
-      csrwi mvu_istride_2 ,  0 
-      csrwi mvu_istride_3 , 30 
-      csrwi mvu_ostride_0 ,  0 
-      csrwi mvu_ostride_1 ,  0 
-      csrwi mvu_ostride_2 ,  0 
-      csrwi mvu_ostride_3 ,  0 
-      csrwi mvu_wlength_0 ,  1       // 2 tiles in width
-      csrwi mvu_wlength_1 ,  3       // number bit combinations i.e. 2x2 bits
-      csrwi mvu_wlength_2 ,  1       // 2 tiles in height
-      csrwi mvu_wlength_3 ,  0
-      csrwi mvu_ilength_0 ,  1       // 2 tiles in height
-      csrwi mvu_ilength_1 ,  0       // number bit combinations
-      csrwi mvu_ilength_2 ,  0       // 2 tiles in width of matrix operand
-      csrwi mvu_ilength_3 ,  0       
-      csrwi mvu_olength_0 ,  1 
-      csrwi mvu_olength_1 ,  0 
-      csrwi mvu_olength_2 ,  0 
-      csrwi mvu_olength_3 ,  0 
+      csrwi mvuwjump_0, 30           // 1 tile back move x 2 bits
+      csrwi mvuwjump_1, 2            // 1 tile ahead move x 2 bits
+      csrwi mvuwjump_2, 0 
+      csrwi mvuwjump_3, 0
+      csrwi mvuwjump_4, 0
+      csrwi mvuijump_0, 30           // 1 tile back move x 2 bits 
+      csrwi mvuijump_1, 0
+      csrwi mvuijump_2, 0
+      csrwi mvuijump_3, 0
+      csrwi mvuijump_4, 0
+      csrwi mvusjump_0, 0
+      csrwi mvusjump_1, 0
+      csrwi mvubjump_0, 0
+      csrwi mvubjump_1, 0
+      csrwi mvuojump_0, 0
+      csrwi mvuojump_1, 0
+      csrwi mvuojump_2, 0
+      csrwi mvuojump_3, 0
+      csrwi mvuojump_4, 0
+      csrwi mvuwlength_0 ,  1       // 2 tiles in width
+      csrwi mvuwlength_1 ,  3       // number bit combinations i.e. 2x2 bits
+      csrwi mvuwlength_2 ,  1       // 2 tiles in height
+      csrwi mvuwlength_3 ,  0
+      csrwi mvuilength_0 ,  1       // 2 tiles in height
+      csrwi mvuilength_1 ,  0       // number bit combinations
+      csrwi mvuilength_2 ,  0       // 2 tiles in width of matrix operand
+      csrwi mvuilength_3 ,  0       
+      csrwi mvuolength_0 ,  1 
+      csrwi mvuolength_1 ,  0 
+      csrwi mvuolength_2 ,  0 
+      csrwi mvuolength_3 ,  0 
 
       addi x1, x0, 1
       slli x1, x1, 30                // mul mode 01
       addi x1, x1, 16
-      csrw mvu_command, x1           // Kick start MVU, 2 tiles x 2 tiles x 2bit x 2bits
+      csrw mvucommand, x1           // Kick start MVU, 2 tiles x 2 tiles x 2bit x 2bits
 
       ret
 
@@ -200,7 +207,7 @@ The commands above need to be executed once so that FuseSoC registers the BARVIN
   fusesoc run --target=sim barvinn --firmware=matmul.hex
 
 
-By default, we have set `verification/tests/core/core_tester.sv` to run. However, once can change this by modifying `barvinn core file <https://github.com/hossein1387/Accelerator/blob/fusesoc/barvinn.core>`_ . Also, you by default, there are initial simulation values in MVU's weight and input rams. You can modify that by using different input and weight files.
+By default, we have set `verification/tests/core/core_tester.sv` to run. However, one can change this by modifying `barvinn core file <https://github.com/hossein1387/Accelerator/blob/fusesoc/barvinn.core>`_ . Also, you by default, there are initial simulation values in MVU's weight and input rams. You can modify that by using different input and weight files.
 
 
 Convolution:
