@@ -151,7 +151,7 @@ As you can see in :numref:`slide_window_valid`, if we just slide the weight tens
 For a 2D convolution operation, :numref:`feature_map_jump_schedule` and :numref:`weight_jump_schedule` illustrates what each jump configuration is:
 
 .. figure:: _static/feature_map_jump_schedule.png
-  :width: 800
+  :width: 600
   :alt: Alternative text
   :name: feature_map_jump_schedule
 
@@ -168,7 +168,7 @@ For inputs we have the following configurable `jump` variables:
 
 
 .. figure:: _static/weight_jump_schedule.png
-  :width: 800
+  :width: 600
   :alt: Alternative text
   :name: weight_jump_schedule
 
@@ -180,6 +180,34 @@ For inputs we have the following configurable `jump` variables:
 - `j0`: Specifies if we have finished all filter sets and channel blocks for output (x,y) and if so, move back to the start of the first filter set for the next window and output (x+1, y).
 - `j4`: not applicable.
 
+
+
+.. figure:: _static/qn_bn_weights.png
+  :width: 800
+  :alt: Alternative text
+  :name: qn_bn_weights
+
+  Quantizer/BN weights
+
+- 16-bit fixed point values
+- Standard bit ordering, i.e. non-bit-sliced, little-endian
+- Each channel block is 64 channels
+- n channel blocks in a layer; would be same as Fc in conv or bn following conv
+
+
+
+.. figure:: _static/bn_bias_weights.png
+  :width: 800
+  :alt: Alternative text
+  :name: bn_bias_weights
+
+  BN/linear biases
+
+- 32-bit fixed point values
+- Only lower 27-bits are used in addition (due to FPGA DSP structure)
+- Standard bit ordering (i.e. non-bit-sliced), little-endian
+- Each channel block is 64 channels
+- n channel blocks in a layer; would be same as Fc in conv or bn following conv
 
 In general, each MVU has 44 configurable registers that can be used in the software. Section :ref:`Control Status Registers` provides details of each register. 
 
