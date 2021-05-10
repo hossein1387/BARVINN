@@ -21,11 +21,6 @@ Then make sure you have fusesoc installed:
 
 Then add `mvu`, `pito` and `barvinn` to your fusesoc libraries (NOTE: if you have used FuseSoC with any of the following projects, you can skip adding it to FuseSoC) :
     
-    cd MVU
-    fusesoc library add mvu .
-    cd ../pito_riscv
-    fusesoc library add pito .
-    cd ..
     fusesoc library add barvinn .
 
 Then run simulation (No GUI):
