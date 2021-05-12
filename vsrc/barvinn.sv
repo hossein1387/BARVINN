@@ -42,7 +42,6 @@ generate
    for (mvu_cnt = 0; mvu_cnt < NMVU; mvu_cnt++)  begin
         // Let's first stitch mvu and pito together:
         assign mvu_intf.start[mvu_cnt]                            = pito_intf.mvu_start[mvu_cnt];
-        assign mvu_intf.irq[mvu_cnt]                              = pito_intf.mvu_irq_i[mvu_cnt];
         assign mvu_intf.mul_mode[mvu_cnt*2 +: 2]                  = pito_intf.csr_mvucommand[(mvu_cnt*32 + 30) +: 2];
         assign mvu_intf.d_signed[mvu_cnt]                         = pito_intf.csr_mvuprecision[mvu_cnt*32 + 25];
         assign mvu_intf.w_signed[mvu_cnt]                         = pito_intf.csr_mvuprecision[mvu_cnt*32 + 24];
@@ -91,15 +90,17 @@ generate
         assign mvu_intf.shacc_load_sel[mvu_cnt]                   = {NJUMPS{1'b1}}; 
         assign mvu_intf.zigzag_step_sel[mvu_cnt]                  = {NJUMPS{1'b1}}; 
 
+        assign pito_intf.mvu_irq_i[mvu_cnt]                       = mvu_intf.irq[mvu_cnt];
+
         // Now we need to connect barvinn to mvu 
         assign barvinn_intf.mvu_irq_tap[mvu_cnt]                  = mvu_intf.irq[mvu_cnt];
         assign barvinn_intf.mvu_wrw_addr[mvu_cnt]                 = mvu_intf.wrw_addr[mvu_cnt];
         assign barvinn_intf.mvu_wrw_word[mvu_cnt]                 = mvu_intf.wrw_word[mvu_cnt];
         assign barvinn_intf.mvu_wrw_en[mvu_cnt]                   = mvu_intf.wrw_en[mvu_cnt];
         assign barvinn_intf.mvu_rdc_en[mvu_cnt]                   = mvu_intf.rdc_en[mvu_cnt];
-        assign barvinn_intf.mvu_rdc_grnt[mvu_cnt]                   = mvu_intf.rdc_grnt[mvu_cnt];
-        assign barvinn_intf.mvu_rdc_addr[mvu_cnt]                   = mvu_intf.rdc_addr[mvu_cnt];
-        assign barvinn_intf.mvu_rdc_word[mvu_cnt]                   = mvu_intf.rdc_word[mvu_cnt];
+        assign barvinn_intf.mvu_rdc_grnt[mvu_cnt]                 = mvu_intf.rdc_grnt[mvu_cnt];
+        assign barvinn_intf.mvu_rdc_addr[mvu_cnt]                 = mvu_intf.rdc_addr[mvu_cnt];
+        assign barvinn_intf.mvu_rdc_word[mvu_cnt]                 = mvu_intf.rdc_word[mvu_cnt];
    end
 endgenerate
 
