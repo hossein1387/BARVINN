@@ -66,10 +66,10 @@ In this example code, we want to program `MVU[0]` to perform a matrix multiplica
       // make sure global interrupt is disabled
       csrwi mstatus, 0x0
       // first things first, clear mvu intterupts pending bit while processing current irq.
-      addi x1, x0, 1
-      slli x1, x1, 16
-      csrc mip, x1
-      // do whatever to make MVU happy 
+      addi t1, x0, 1
+      slli t1, t1, 16
+      csrc mip, t1
+      // do whatever to make MVU happy
       addi x0, x0, 0
       // we can now start processing incoming interrupts
       addi gp, sp, 0
@@ -101,29 +101,29 @@ In this example code, we want to program `MVU[0]` to perform a matrix multiplica
       ret
 
   mat_mul:
-      addi  x1, x0, 0
-      addi  x2, x0, 2
-      add   x1, x1, x2               // set weight precision to 2
-      slli  x3, x2, 6                // set input precision to 2
-      add   x1, x1, x3
-      slli  x3, x2, 12                // set output precision to 2
-      add   x1, x1, x3
-      csrw  mvu_precision,  x1
+      addi  t1, x0, 0
+      addi  t2, x0, 2
+      add   t1, t1, t2               // set weight precision to 2
+      slli  t3, t2, 6                // set input precision to 2
+      add   t1, t1, t3
+      slli  t3, t2, 12                // set output precision to 2
+      add   t1, t1, t3
+      csrw  mvuprecision,  t1
 
       csrwi mvuquant     , 10       // set quant_msbidx to 10
       csrwi mvuwbaseptr  , 0        // set weight address to 0
       csrwi mvuibaseptr  , 0        // set input address to 0
 
-      addi  x1, x0, 1
-      slli  x1, x1, 10               // set output address to 0x400
-      csrw mvuobaseptr , x1
+      addi  t1, x0, 1
+      slli  t1, t1, 10               // set output address to 0x400
+      csrw mvuobaseptr , t1
 
       csrwi mvuwjump_0, 30           // 1 tile back move x 2 bits
       csrwi mvuwjump_1, 2            // 1 tile ahead move x 2 bits
-      csrwi mvuwjump_2, 0 
+      csrwi mvuwjump_2, 0
       csrwi mvuwjump_3, 0
       csrwi mvuwjump_4, 0
-      csrwi mvuijump_0, 30           // 1 tile back move x 2 bits 
+      csrwi mvuijump_0, 30           // 1 tile back move x 2 bits
       csrwi mvuijump_1, 0
       csrwi mvuijump_2, 0
       csrwi mvuijump_3, 0
@@ -137,24 +137,24 @@ In this example code, we want to program `MVU[0]` to perform a matrix multiplica
       csrwi mvuojump_2, 0
       csrwi mvuojump_3, 0
       csrwi mvuojump_4, 0
-      csrwi mvuwlength_0 ,  1       // 2 tiles in width
-      csrwi mvuwlength_1 ,  3       // number bit combinations i.e. 2x2 bits
-      csrwi mvuwlength_2 ,  1       // 2 tiles in height
-      csrwi mvuwlength_3 ,  0
-      csrwi mvuilength_0 ,  1       // 2 tiles in height
-      csrwi mvuilength_1 ,  0       // number bit combinations
-      csrwi mvuilength_2 ,  0       // 2 tiles in width of matrix operand
-      csrwi mvuilength_3 ,  0       
-      csrwi mvuolength_0 ,  1 
-      csrwi mvuolength_1 ,  0 
-      csrwi mvuolength_2 ,  0 
-      csrwi mvuolength_3 ,  0 
+      csrwi mvuwlength_1 ,  1       // 2 tiles in width
+      csrwi mvuwlength_2 ,  3       // number bit combinations i.e. 2x2 bits
+      csrwi mvuwlength_3 ,  1       // 2 tiles in height
+      csrwi mvuwlength_4 ,  0
+      csrwi mvuilength_1 ,  1       // 2 tiles in height
+      csrwi mvuilength_2 ,  0       // number bit combinations
+      csrwi mvuilength_3 ,  0       // 2 tiles in width of matrix operand
+      csrwi mvuilength_4 ,  0
+      csrwi mvuolength_1 ,  1
+      csrwi mvuolength_2 ,  0
+      csrwi mvuolength_3 ,  0
+      csrwi mvuolength_4 ,  0
 
-      addi x1, x0, 1
-      slli x1, x1, 30                // mul mode 01
-      addi x1, x1, 16
-      csrw mvucommand, x1           // Kick start MVU, 2 tiles x 2 tiles x 2bit x 2bits
-
+      addi t1, x0, 1
+      slli t1, t1, 30                // mul mode 01
+      addi t1, t1, 16
+      csrw mvucommand, t1           // Kick start MVU, 2 tiles x 2 tiles x 2bit x 2bits
+      addi ra, sp, 0
       ret
 
   // Done with our awesome program!
@@ -167,6 +167,7 @@ In this example code, we want to program `MVU[0]` to perform a matrix multiplica
       sw  a2,0(a0)
       sw  a3,0(a0)
       ebreak
+
 
 
 To run the code on BARVINN, we will first need to compile the above code. This source code is provided in BARVINN's `csrc directory <https://github.com/hossein1387/Accelerator/tree/master/csrc>`_. You can compile the code using the following instructions:
