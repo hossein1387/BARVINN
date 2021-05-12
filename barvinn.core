@@ -109,7 +109,7 @@ targets:
         tools: 
             xsim:
                 xelab_options: [--debug, typical, -L, secureip, -L, unisims_ver, -L, unimacro_ver, -L, work.glbl, -L, blk_mem_gen_v8_4_3, --timescale, 1ns/1ps]
-        parameters: [XILINX]
+        parameters: [XILINX, firmware]
         toplevel: testbench_top
     synth:
         description: Synthesize the design for an FPGA board
@@ -128,3 +128,7 @@ parameters:
         datatype  : int
         default   : 1
         paramtype : vlogdefine
+    firmware:
+        datatype  : file
+        default   : /users/hemmat/MyRepos/BARVINN/csrc/matmul/matmul.hex
+        paramtype : plusarg
