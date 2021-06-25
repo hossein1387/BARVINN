@@ -1,5 +1,5 @@
 `include "pito_inf.svh"
-`include "core_tester.sv"
+`include "matmul_tester.sv"
 
 
 module testbench_top import utils::*;();
@@ -18,11 +18,11 @@ module testbench_top import utils::*;();
                       .barvinn_intf(barvinn_intf));
 
     // interface_tester tb;
-    core_tester tb;
+    matmul_tester tb;
 
     initial begin
         logger = new(sim_log_file);
-        tb = new(logger, pito_intf.tb_interface);
+        tb = new(logger, pito_intf.tb_interface, mvu_intf.tb_interface);
 
         tb.tb_setup();
         tb.run();
