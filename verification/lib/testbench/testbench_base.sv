@@ -12,8 +12,8 @@ import mvu_pkg::*;
 class barvinn_testbench_base extends BaseObj;
 
     string firmware;
+    virtual barvinn_interface barvinn_intf;
     virtual pito_interface pito_intf;
-    virtual mvu_interface mvu_intf;
     rv32_pkg::rv32_data_q instr_q;
     pito_monitor monitor;
     int hart_ids_q[$]; // hart id to monitor
@@ -21,14 +21,13 @@ class barvinn_testbench_base extends BaseObj;
     test_stats_t test_stat;
     tb_config cfg;
 
-    function new (Logger logger, virtual pito_interface pito_intf, virtual mvu_interface mvu_intf, int hart_mon_en[$]={});
+    function new (Logger logger, virtual barvinn_interface barvinn_intf, virtual pito_interface pito_intf, int hart_mon_en[$]={});
         super.new(logger);
         cfg = new(logger);
-        cfg.parse_args();
+        void'(cfg.parse_args());
         this.firmware = cfg.firmware;
+        this.barvinn_intf = barvinn_intf;
         this.pito_intf = pito_intf;
-        this.mvu_intf = mvu_intf;
-
         // read hex file and store the first n words to the ram
         instr_q = process_hex_file(firmware, logger, `NUM_INSTR_WORDS); 
         // Check if user has requested to monitor any particular hart/s
@@ -55,32 +54,33 @@ class barvinn_testbench_base extends BaseObj;
 
     task write_mvu_data(int mvu, unsigned[BDBANKW-1 : 0] word, unsigned[BDBANKA-1 : 0] addr);
         checkmvu(mvu);
-        mvu_intf.wrc_addr = addr;
-        mvu_intf.wrc_word = word;
-        mvu_intf.wrc_en[mvu] = 1'b1;
-        @(posedge mvu_intf.clk)
-        mvu_intf.wrc_en[mvu] = 1'b0;
+        barvinn_intf.cb.mvu_wrc_addr <= addr;
+        barvinn_intf.cb.mvu_wrc_word <= word;
+        barvinn_intf.cb.mvu_wrc_en[mvu] <= 1'b1;
+        @(posedge barvinn_intf.clk)
+        barvinn_intf.cb.mvu_wrc_en[mvu] <= 1'b0;
     endtask
 
     task write_mvu_weights(int mvu, unsigned[BWBANKW-1 : 0] word, unsigned[BWBANKA-1 : 0] addr);
         checkmvu(mvu);
-        mvu_intf.wrw_addr[mvu*BWBANKA +: BWBANKA] = addr;
-        mvu_intf.wrw_word[mvu*BWBANKW +: BWBANKW] = word;
-        mvu_intf.wrw_en[mvu] = 1'b1;
-        @(posedge mvu_intf.clk)
-        mvu_intf.wrw_en[mvu] = 1'b0;
+        $display($sformatf("write_weight_data: writing %16h at %12h", word, addr));
+        barvinn_intf.cb.mvu_wrw_addr[mvu*BWBANKA +: BWBANKA] <= addr;
+        barvinn_intf.cb.mvu_wrw_word[mvu*BWBANKW +: BWBANKW] <= word;
+        barvinn_intf.cb.mvu_wrw_en[mvu] <= 1'b1;
+        @(posedge barvinn_intf.clk)
+        barvinn_intf.cb.mvu_wrw_en[mvu] <= 1'b0;
     endtask
 
     task automatic readData(int mvu, logic unsigned [BDBANKA-1 : 0] addr, ref logic unsigned [BDBANKW-1 : 0] word, ref logic unsigned [NMVU-1 : 0] grnt);
         checkmvu(mvu);
-        mvu_intf.rdc_addr[mvu*BDBANKA +: BDBANKA] = addr;
-        mvu_intf.rdc_en[mvu] = 1;
-        @(posedge mvu_intf.clk)
-        grnt[mvu] = mvu_intf.rdc_grnt[mvu];
-        mvu_intf.rdc_en[mvu] = 0;
-        @(posedge mvu_intf.clk)
-        @(posedge mvu_intf.clk)
-        word = mvu_intf.rdc_word[mvu*BDBANKW +: BDBANKW];
+        barvinn_intf.cb.mvu_rdc_addr[mvu*BDBANKA +: BDBANKA] <= addr;
+        barvinn_intf.cb.mvu_rdc_en[mvu] <= 1;
+        @(posedge barvinn_intf.clk)
+        grnt[mvu] = barvinn_intf.cb.mvu_rdc_grnt[mvu];
+        barvinn_intf.cb.mvu_rdc_en[mvu] <= 0;
+        @(posedge barvinn_intf.clk)
+        @(posedge barvinn_intf.clk)
+        word = barvinn_intf.mvu_rdc_word[mvu*BDBANKW +: BDBANKW];
     endtask
 
     function automatic rv32_data_q process_hex_file(string hex_file, Logger logger, int nwords);
@@ -120,105 +120,44 @@ class barvinn_testbench_base extends BaseObj;
                 end
             end
         end else begin
-            @(posedge pito_intf.clk);
-            pito_intf.pito_io_imem_w_en = 1'b1;
-            @(posedge pito_intf.clk);
+            @(posedge barvinn_intf.clk);
+            barvinn_intf.cb.pito_io_imem_w_en <= 1'b1;
+            @(posedge barvinn_intf.clk);
             for (int addr=0; addr<instr_q.size(); addr++) begin
-                @(posedge pito_intf.clk);
-                pito_intf.pito_io_imem_data = instr_q[addr];
-                pito_intf.pito_io_imem_addr = addr;
+                @(posedge barvinn_intf.clk);
+                barvinn_intf.cb.pito_io_imem_data <= instr_q[addr];
+                barvinn_intf.cb.pito_io_imem_addr <= addr;
                 if(log_to_console) begin
                     logger.print($sformatf("[%4d]: 0x%8h     %s", addr, instr_q[addr], rv32_utils::get_instr_str(rv32i_dec.decode_instr(instr_q[addr]))));
                 end
             end
-            @(posedge pito_intf.clk);
-            pito_intf.pito_io_imem_w_en = 1'b0;
+            @(posedge barvinn_intf.clk);
+            barvinn_intf.cb.pito_io_imem_w_en <= 1'b0;
         end
     endtask
 
     task pito_init();
-        pito_intf.pito_io_rst_n     = 1'b1;
-        pito_intf.pito_io_dmem_w_en = 1'b0;
-        pito_intf.pito_io_imem_w_en = 1'b0;
-        pito_intf.pito_io_imem_addr = 32'b0;
-        pito_intf.pito_io_dmem_addr = 32'b0;
-        pito_intf.pito_io_program   = 0;
-        pito_intf.mvu_irq_i         = 0;
+        barvinn_intf.cb.rst_n             <= 1'b1;
+        barvinn_intf.cb.pito_io_dmem_w_en <= 1'b0;
+        barvinn_intf.cb.pito_io_imem_w_en <= 1'b0;
+        barvinn_intf.cb.pito_io_imem_addr <= 32'b0;
+        barvinn_intf.cb.pito_io_dmem_addr <= 32'b0;
+        barvinn_intf.cb.pito_io_program   <= 0;
+        // barvinn_intf.mvu_irq_i         = 0;
 
-        @(posedge pito_intf.clk);
-        pito_intf.pito_io_rst_n = 1'b0;
-        @(posedge pito_intf.clk);
+        @(posedge barvinn_intf.clk);
+        barvinn_intf.cb.rst_n <= 1'b0;
+        @(posedge barvinn_intf.clk);
 
         this.write_instr_to_ram(1, 0);
         this.write_data_to_ram(instr_q);
 
-        @(posedge pito_intf.clk);
-        pito_intf.pito_io_rst_n = 1'b1;
-        @(posedge pito_intf.clk);
+        @(posedge barvinn_intf.clk);
     endtask
 
     task mvu_init();
-        mvu_intf.rst_n = 0;
-        mvu_intf.start = 0;
-        mvu_intf.ic_clr = 0;      
-        mvu_intf.mul_mode = {NMVU{2'b01}};
-        mvu_intf.d_signed = 0;
-        mvu_intf.w_signed = 0;
-        mvu_intf.shacc_clr = 0;
-        mvu_intf.max_en = 0;
-        mvu_intf.max_clr = 0;
-        mvu_intf.max_pool = 0;
-        mvu_intf.rdc_en = 0;
-        mvu_intf.rdc_addr = 0;
-        mvu_intf.wrc_en = 0;
-        mvu_intf.wrc_addr = 0;
-        mvu_intf.wrc_word = 0;
-        mvu_intf.quant_clr = 0;
-        mvu_intf.quant_msbidx = 0;
-        mvu_intf.countdown = 0;
-        mvu_intf.wprecision = 0;
-        mvu_intf.iprecision = 0;
-        mvu_intf.oprecision = 0;
-        mvu_intf.wbaseaddr = 0;
-        mvu_intf.ibaseaddr = 0;
-        mvu_intf.obaseaddr = 0;
-        mvu_intf.omvusel = 0;
 
-        // Initialize arrays
-        for (int m = 0; m < NMVU; m++) begin
-            // Initialize jumps
-            for (int i = 0; i < NJUMPS; i++) begin
-                mvu_intf.wjump[m][i] = 0;
-                mvu_intf.ijump[m][i] = 0;
-                mvu_intf.ojump[m][i] = 0;
-            end
-
-            // Initizalize lengths
-            for (int i = 1; i < NJUMPS; i++) begin
-                mvu_intf.wlength[m][i] = 0;
-                mvu_intf.ilength[m][i] = 0;
-                mvu_intf.olength[m][i] = 0;
-            end
-
-            mvu_intf.shacc_load_sel[m] = 0;
-            mvu_intf.zigzag_step_sel[m] = 0;
-        end
-        
-        mvu_intf.scaler_b = 1;
-        mvu_intf.wrw_addr = 0;
-        mvu_intf.wrw_word = 0;
-        mvu_intf.wrw_en = 0;
-
-        // #(`CLOCK_SPEED*10);
-        for(int i=0; i<10; i++) @(posedge mvu_intf.clk);
-        // Come out of reset
-        mvu_intf.rst_n = 1'b1;
-        // #(`CLOCK_SPEED*10);
-        for(int i=0; i<10; i++) @(posedge mvu_intf.clk);
- 
-        // Turn some stuff on
-        mvu_intf.max_en = 1;
-    endtask 
+    endtask
 
     virtual task tb_setup();
         logger.print_banner("Testbench Setup Phase");
@@ -227,14 +166,14 @@ class barvinn_testbench_base extends BaseObj;
         mvu_init();
         logger.print("Initializing RISC-V cores ...");
         pito_init();
-
         logger.print("Setup Phase Done ...");
     endtask
 
     virtual task run();
         logger.print_banner("Testbench Run phase");
-        logger.print("Run method is not implemented");
-        logger.print("Run phase done ...");
+        @(posedge barvinn_intf.clk);
+        barvinn_intf.cb.rst_n <= 1'b1;
+        // @(posedge barvinn_intf.clk);
     endtask 
 
     virtual task report();

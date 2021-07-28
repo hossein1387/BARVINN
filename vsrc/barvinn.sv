@@ -31,8 +31,8 @@ module barvinn #(
     assign mvu_done = mvu_intf.done;
 
     // connecting global reset
-    assign mvu_intf.rst_n         = barvinn_intf.rst_n;
-    assign mvu_intf.rst_n         = barvinn_intf.rst_n;
+    assign mvu_intf.rst_n          = barvinn_intf.rst_n;
+    assign pito_intf.pito_io_rst_n = barvinn_intf.rst_n;
 
     assign mvu_intf.ic_clr        = barvinn_intf.rst_n;
     // assign mvu_ic_recv_from  = 0;
@@ -58,7 +58,7 @@ generate
         assign mvu_intf.wbaseaddr[mvu_cnt*BBWADDR +: BBWADDR]     = pito_intf.csr_mvuwbaseptr[mvu_cnt*32 +: BBWADDR];
         assign mvu_intf.ibaseaddr[mvu_cnt*BBDADDR +: BBDADDR]     = pito_intf.csr_mvuibaseptr[mvu_cnt*32 +: BBDADDR];
         assign mvu_intf.obaseaddr[mvu_cnt*BBDADDR +: BBDADDR]     = pito_intf.csr_mvuobaseptr[mvu_cnt*32 +: BBDADDR];
-        assign mvu_intf.omvusel                                   = 8'b00000001;
+        assign mvu_intf.omvusel[mvu_cnt]                          = 8'b00000001;
         assign mvu_intf.wjump[mvu_cnt][0]                         = pito_intf.csr_mvuwjump_0[mvu_cnt*32 +: BJUMP];
         assign mvu_intf.wjump[mvu_cnt][1]                         = pito_intf.csr_mvuwjump_1[mvu_cnt*32 +: BJUMP];
         assign mvu_intf.wjump[mvu_cnt][2]                         = pito_intf.csr_mvuwjump_2[mvu_cnt*32 +: BJUMP];
@@ -86,27 +86,43 @@ generate
         assign mvu_intf.olength[mvu_cnt][2]                       = pito_intf.csr_mvuolength_2[mvu_cnt*32 +: BLENGTH];
         assign mvu_intf.olength[mvu_cnt][3]                       = pito_intf.csr_mvuolength_3[mvu_cnt*32 +: BLENGTH];
         assign mvu_intf.olength[mvu_cnt][4]                       = pito_intf.csr_mvuolength_4[mvu_cnt*32 +: BLENGTH];
-        assign mvu_intf.scaler_b[mvu_cnt]                         = {BSCALERB{1'b1}};
-        assign mvu_intf.shacc_load_sel[mvu_cnt]                   = {NJUMPS{1'b1}}; 
-        assign mvu_intf.zigzag_step_sel[mvu_cnt]                  = {NJUMPS{1'b1}}; 
+        assign mvu_intf.scaler_b                                  = 128'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
+        assign mvu_intf.shacc_load_sel[mvu_cnt]                   = 5'b11111;//{NJUMPS{1'b1}}; 
+        assign mvu_intf.zigzag_step_sel[mvu_cnt]                  = 5'b11111;//{NJUMPS{1'b1}}; 
 
         assign pito_intf.mvu_irq_i[mvu_cnt]                       = mvu_intf.irq[mvu_cnt];
 
-        // Now we need to connect barvinn to mvu 
-        assign barvinn_intf.mvu_irq_tap[mvu_cnt]                  = mvu_intf.irq[mvu_cnt];
-        assign barvinn_intf.mvu_wrw_addr[mvu_cnt]                 = mvu_intf.wrw_addr[mvu_cnt];
-        assign barvinn_intf.mvu_wrw_word[mvu_cnt]                 = mvu_intf.wrw_word[mvu_cnt];
-        assign barvinn_intf.mvu_wrw_en[mvu_cnt]                   = mvu_intf.wrw_en[mvu_cnt];
-        assign barvinn_intf.mvu_rdc_en[mvu_cnt]                   = mvu_intf.rdc_en[mvu_cnt];
-        assign barvinn_intf.mvu_rdc_grnt[mvu_cnt]                 = mvu_intf.rdc_grnt[mvu_cnt];
-        assign barvinn_intf.mvu_rdc_addr[mvu_cnt]                 = mvu_intf.rdc_addr[mvu_cnt];
-        assign barvinn_intf.mvu_rdc_word[mvu_cnt]                 = mvu_intf.rdc_word[mvu_cnt];
    end
 endgenerate
+
+        // Now we need to connect barvinn to mvu 
+        assign mvu_intf.irq      = barvinn_intf.mvu_irq_tap;
+        assign mvu_intf.wrw_addr = barvinn_intf.mvu_wrw_addr;
+        assign mvu_intf.wrw_word = barvinn_intf.mvu_wrw_word;
+        assign mvu_intf.wrw_en   = barvinn_intf.mvu_wrw_en;
+        assign mvu_intf.rdc_en   = barvinn_intf.mvu_rdc_en;
+        assign mvu_intf.rdc_grnt = barvinn_intf.mvu_rdc_grnt;
+        assign mvu_intf.rdc_addr = barvinn_intf.mvu_rdc_addr;
+        assign mvu_intf.rdc_word = barvinn_intf.mvu_rdc_word;
+        assign mvu_intf.wrc_en   = barvinn_intf.mvu_wrc_en;   // Data memory: controller write enable
+        assign barvinn_intf.mvu_wrc_grnt = mvu_intf.wrc_grnt; // Data memory: controller write grant
+
+    //=======================================
+    //          PITO Interface
+    //=======================================
+    assign pito_intf.pito_io_imem_addr = barvinn_intf.pito_io_imem_addr;
+    assign pito_intf.pito_io_imem_data = barvinn_intf.pito_io_imem_data;
+    assign pito_intf.pito_io_dmem_addr = barvinn_intf.pito_io_dmem_addr;
+    assign pito_intf.pito_io_dmem_data = barvinn_intf.pito_io_dmem_data;
+    assign pito_intf.pito_io_imem_w_en = barvinn_intf.pito_io_imem_w_en;
+    assign pito_intf.pito_io_dmem_w_en = barvinn_intf.pito_io_dmem_w_en;
+    assign pito_intf.pito_io_program = barvinn_intf.pito_io_program;
 
     //=======================================
     //          MVU Interface
     //=======================================
+        assign mvu_intf.wrc_addr = barvinn_intf.mvu_wrc_addr; // Data memory: controller write address
+        assign mvu_intf.wrc_word = barvinn_intf.mvu_wrc_word; // Data memory: controller write word
     // Data Transposer: 
     generate
         for(mvu_cnt=0; mvu_cnt < NMVU; mvu_cnt++) begin
@@ -125,13 +141,12 @@ endgenerate
                    .iword       (barvinn_intf.mvu_data_iword[mvu_cnt*`XPR_LEN +: `XPR_LEN]), // Base address for writing the words
                    .start       (barvinn_intf.mvu_data_start[mvu_cnt]                     ), // Start signal to indicate first word to be transposed
                    .busy        (barvinn_intf.mvu_data_busy[mvu_cnt]                      ), // A signal to indicate the status of the module
-                   .mvu_wr_en   (mvu_intf.wrc_en[mvu_cnt]                                 ), // MVU write enable to input RAM
-                   .mvu_wr_addr (mvu_intf.wrc_addr                                        ), // MVU write address to input RAM
-                   .mvu_wr_word (mvu_intf.wrc_word                                        )  // MVU write data to input RAM
+                   .mvu_wr_en   (barvinn_intf.mvu_wrc_en[mvu_cnt]                         ), // MVU write enable to input RAM
+                   .mvu_wr_addr (barvinn_intf.mvu_wrc_addr                                ), // MVU write address to input RAM
+                   .mvu_wr_word (barvinn_intf.mvu_wrc_word                                )  // MVU write data to input RAM
             );
         end
     endgenerate
-
 
     mvutop mvu(mvu_intf);
 
