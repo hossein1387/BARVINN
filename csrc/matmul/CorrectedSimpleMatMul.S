@@ -209,23 +209,23 @@ MatMul_0_init:
 MatMul_0_loop:
     addi sp, sp, -4
     sw ra, 4(sp)
-    addi s0, x0, 200
-    li s1, 410
+    addi s0, x0, 64
+    li s1, 1024
     li s2, 0
     li s3, 0
     addi s4, x0, 1
     slli s4, s4, 30
     addi s4, s4, 4
 loop:
-    csrwi mvuquant, 2
+    csrwi mvuquant, 1
     csrw mvuwbaseptr, s2
     csrw mvuibaseptr, s3
     csrw mvuobaseptr , s1
     csrw mvucommand, s4
     jal wait_for_mvu_irq
     addi s0,s0, -1 
-    addi s1, s1, 100
-    addi s3, s3, 1
+    addi s1, s1, 2
+    addi s3, s3, 2
     bne s0, x0, loop
 
     lw ra, 4(sp)
