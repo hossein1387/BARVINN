@@ -1,5 +1,6 @@
 `include "testbench_base.sv"
 
+`define hdl_path_mvu0_mem_1 testbench_top.barvinn_inst.mvu.mvuarray[0].mvunit.bankarray[1].db.b.inst.native_mem_module.blk_mem_gen_v8_4_3_inst.memory
 class matmul_tester extends barvinn_testbench_base;
 
     function new(Logger logger, virtual barvinn_interface barvinn_intf, virtual pito_interface pito_intf);
@@ -77,10 +78,13 @@ class matmul_tester extends barvinn_testbench_base;
         int word_cnt = 0;
         if (fd)  begin logger.print($sformatf("%s was opened successfully : %0d", output_file, fd)); end
         else     begin logger.print($sformatf("%s was NOT opened successfully : %0d", output_file, fd)); $finish(); end
+        logger.print($sformatf("=> Reading output ram ..."));
         while (word_cnt<words_to_read) begin
             // data_q.push_back(temp_dat);
             // readData(int mvu, logic unsigned [BDBANKA-1 : 0] addr, ref logic unsigned [BDBANKW-1 : 0] word, ref logic unsigned [NMVU-1 : 0] grnt);
             // readData(mvu, addr, temp_dat, grnt);
+            logger.print($sformatf("[%4h]: 0x%16h", addr, `hdl_path_mvu0_mem_1[addr]));
+            $fwrite(fd,"%16h\n",`hdl_path_mvu0_mem_1[addr]);
             addr += 1;
             word_cnt += 1;
         end
@@ -99,7 +103,7 @@ class matmul_tester extends barvinn_testbench_base;
         string output_file = "result.hex";
         super.report();
         logger.print($sformatf("dumping results into %s ...", output_file));
-        dump_output_data(output_file, 0, 0, 1600);
+        dump_output_data(output_file, 0, 0, 1024);
     endtask
 
 endclass
