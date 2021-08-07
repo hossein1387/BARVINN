@@ -58,7 +58,7 @@ generate
         assign mvu_intf.wbaseaddr[mvu_cnt*BBWADDR +: BBWADDR]     = pito_intf.csr_mvuwbaseptr[mvu_cnt*32 +: BBWADDR];
         assign mvu_intf.ibaseaddr[mvu_cnt*BBDADDR +: BBDADDR]     = pito_intf.csr_mvuibaseptr[mvu_cnt*32 +: BBDADDR];
         assign mvu_intf.obaseaddr[mvu_cnt*BBDADDR +: BBDADDR]     = pito_intf.csr_mvuobaseptr[mvu_cnt*32 +: BBDADDR];
-        assign mvu_intf.omvusel[mvu_cnt]                          = 8'b00000001;
+        assign mvu_intf.omvusel[mvu_cnt]                          = 8'b00000001; //-> error, should be like omvusel[mvu_cnt*8 +: 8]
         assign mvu_intf.wjump[mvu_cnt][0]                         = pito_intf.csr_mvuwjump_0[mvu_cnt*32 +: BJUMP];
         assign mvu_intf.wjump[mvu_cnt][1]                         = pito_intf.csr_mvuwjump_1[mvu_cnt*32 +: BJUMP];
         assign mvu_intf.wjump[mvu_cnt][2]                         = pito_intf.csr_mvuwjump_2[mvu_cnt*32 +: BJUMP];
@@ -86,9 +86,9 @@ generate
         assign mvu_intf.olength[mvu_cnt][2]                       = pito_intf.csr_mvuolength_2[mvu_cnt*32 +: BLENGTH];
         assign mvu_intf.olength[mvu_cnt][3]                       = pito_intf.csr_mvuolength_3[mvu_cnt*32 +: BLENGTH];
         assign mvu_intf.olength[mvu_cnt][4]                       = pito_intf.csr_mvuolength_4[mvu_cnt*32 +: BLENGTH];
-        assign mvu_intf.scaler_b                                  = 128'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
-        assign mvu_intf.shacc_load_sel[mvu_cnt]                   = 5'b11111;//{NJUMPS{1'b1}}; 
-        assign mvu_intf.zigzag_step_sel[mvu_cnt]                  = 5'b11111;//{NJUMPS{1'b1}}; 
+        assign mvu_intf.scaler_b[mvu_cnt*BSCALERB +: BSCALERB]    = 16'h01;
+        assign mvu_intf.shacc_load_sel[mvu_cnt]                   = 5'b00001;//{NJUMPS{1'b1}}; // they have to be CSR to support GEMV and Conv
+        assign mvu_intf.zigzag_step_sel[mvu_cnt]                  = 5'b00011;//{NJUMPS{1'b1}}; // they have to be CSR to support GEMV and Conv
 
         assign pito_intf.mvu_irq_i[mvu_cnt]                       = mvu_intf.irq[mvu_cnt];
 
@@ -153,7 +153,7 @@ endgenerate
     rv32_core pito_rv32_core(pito_intf);
 
 always @(posedge mvu_intf.irq[0]) begin
-    $display("IRQ is sent!");
+    $display($sformatf("IRQ is sent!, S0=%0d, SP=%0d", testbench_top.barvinn_inst.pito_rv32_core.regfile.genblk1[0].regfile.data[8], testbench_top.barvinn_inst.pito_rv32_core.regfile.genblk1[0].regfile.data[2]));
 end
 
 endmodule
