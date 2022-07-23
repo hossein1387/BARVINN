@@ -103,7 +103,7 @@ class matmul_tester extends barvinn_testbench_base;
         string output_file = "result.hex";
         super.report();
         logger.print($sformatf("dumping results into %s ...", output_file));
-        dump_output_data(output_file, 0, 0, 1024);
+        dump_output_data(output_file, 0, 0, 8192);
     endtask
 
 endclass

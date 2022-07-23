@@ -227,7 +227,6 @@ loop:
     addi s1, s1, 2
     addi s3, s3, 2
     bne s0, x0, loop
-
     lw ra, 4(sp)
     addi sp, sp, 4
     ret

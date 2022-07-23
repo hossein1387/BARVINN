@@ -32,10 +32,10 @@ interface barvinn_interface(input logic clk);
     logic [        NMVU-1  : 0] mvu_rdc_grnt; // output rdc_grnt;
     logic [NMVU*BDBANKA-1  : 0] mvu_rdc_addr; // input  rdc_addr;
     logic [NMVU*BDBANKW-1  : 0] mvu_rdc_word; // output rdc_word;
-    logic[          NMVU-1 : 0] mvu_wrc_en;               // Data memory: controller write enable
-    logic[          NMVU-1 : 0] mvu_wrc_grnt;             // Data memory: controller write grant
-    logic[       BDBANKA-1 : 0] mvu_wrc_addr;             // Data memory: controller write address
-    logic[       BDBANKW-1 : 0] mvu_wrc_word;             // Data memory: controller write word
+    logic[          NMVU-1 : 0] mvu_wrc_en;   // Data memory: controller write enable
+    logic[          NMVU-1 : 0] mvu_wrc_grnt; // Data memory: controller write grant
+    logic[       BDBANKA-1 : 0] mvu_wrc_addr; // Data memory: controller write address
+    logic[       BDBANKW-1 : 0] mvu_wrc_word; // Data memory: controller write word
 
 //=================================================
 // Modport for Testbench interface 
@@ -95,7 +95,7 @@ clocking cb @ (posedge clk);
     inout mvu_wrc_addr;
     inout mvu_wrc_word;
 endclocking
-  
+
   //=================================================
 // Modport for System interface 
 //=================================================

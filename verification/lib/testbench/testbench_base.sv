@@ -12,24 +12,35 @@ import mvu_pkg::*;
 class barvinn_testbench_base extends BaseObj;
 
     string firmware;
-    virtual barvinn_interface barvinn_intf;
-    virtual pito_interface pito_intf;
+    string rodata;
+    virtual MVU_EXT_INTERFACE mvu_ext_intf;
+    virtual pito_soc_ext_interface pito_ext_intf;
     rv32_pkg::rv32_data_q instr_q;
+    rv32_pkg::rv32_data_q rodata_q;
     pito_monitor monitor;
     int hart_ids_q[$]; // hart id to monitor
     rv32_utils::RV32IDecoder rv32i_dec;
     test_stats_t test_stat;
     tb_config cfg;
+    logic predictor_silent_mode;
 
-    function new (Logger logger, virtual barvinn_interface barvinn_intf, virtual pito_interface pito_intf, int hart_mon_en[$]={});
-        super.new(logger);
+
+    function new (Logger logger, virtual MVU_EXT_INTERFACE mvu_ext_intf, virtual pito_soc_ext_interface pito_ext_intf, int hart_mon_en[$]={}, logic predictor_silent_mode=0, logic rv_reg_tests=0);
+    super.new(logger);
         cfg = new(logger);
         void'(cfg.parse_args());
-        this.firmware = cfg.firmware;
-        this.barvinn_intf = barvinn_intf;
-        this.pito_intf = pito_intf;
-        // read hex file and store the first n words to the ram
-        instr_q = process_hex_file(firmware, logger, `NUM_INSTR_WORDS); 
+        this.mvu_ext_intf = mvu_ext_intf;
+        this.pito_ext_intf = pito_ext_intf;
+        this.predictor_silent_mode = predictor_silent_mode;
+        // For RISC-V regression tests, we initialize ram at run stage
+        if (rv_reg_tests==0) begin
+            this.firmware = cfg.firmware;
+            this.rodata = cfg.rodata;
+            // read hex file and store the first n words to the ram
+            instr_q = process_hex_file(firmware, logger, `NUM_INSTR_WORDS); 
+            rodata_q = process_hex_file(rodata, logger, `NUM_INSTR_WORDS); 
+        end
+
         // Check if user has requested to monitor any particular hart/s
         if (hart_mon_en.size()==0) begin
             // Initialize harts in the system
@@ -41,7 +52,7 @@ class barvinn_testbench_base extends BaseObj;
         end else begin
             this.hart_ids_q = hart_mon_en;
         end
-        monitor = new(this.logger, this.instr_q, this.pito_intf, this.hart_ids_q, this.test_stat);
+        monitor = new(this.logger, this.instr_q, this.rodata_q, this.pito_ext_intf, this.hart_ids_q, this.test_stat, predictor_silent_mode);
         this.rv32i_dec = new(this.logger);
     endfunction
 
@@ -54,33 +65,32 @@ class barvinn_testbench_base extends BaseObj;
 
     task write_mvu_data(int mvu, unsigned[BDBANKW-1 : 0] word, unsigned[BDBANKA-1 : 0] addr);
         checkmvu(mvu);
-        barvinn_intf.cb.mvu_wrc_addr <= addr;
-        barvinn_intf.cb.mvu_wrc_word <= word;
-        barvinn_intf.cb.mvu_wrc_en[mvu] <= 1'b1;
-        @(posedge barvinn_intf.clk)
-        barvinn_intf.cb.mvu_wrc_en[mvu] <= 1'b0;
+        mvu_ext_intf.wrc_addr = addr;
+        mvu_ext_intf.wrc_word = word;
+        mvu_ext_intf.wrc_en[mvu] = 1'b1;
+        @(posedge mvu_ext_intf.clk)
+        mvu_ext_intf.wrc_en[mvu] = 1'b0;
     endtask
 
     task write_mvu_weights(int mvu, unsigned[BWBANKW-1 : 0] word, unsigned[BWBANKA-1 : 0] addr);
         checkmvu(mvu);
-        $display($sformatf("write_weight_data: writing %16h at %12h", word, addr));
-        barvinn_intf.cb.mvu_wrw_addr[mvu*BWBANKA +: BWBANKA] <= addr;
-        barvinn_intf.cb.mvu_wrw_word[mvu*BWBANKW +: BWBANKW] <= word;
-        barvinn_intf.cb.mvu_wrw_en[mvu] <= 1'b1;
-        @(posedge barvinn_intf.clk)
-        barvinn_intf.cb.mvu_wrw_en[mvu] <= 1'b0;
+        mvu_ext_intf.wrw_addr[mvu*BWBANKA +: BWBANKA] = addr;
+        mvu_ext_intf.wrw_word[mvu*BWBANKW +: BWBANKW] = word;
+        mvu_ext_intf.wrw_en[mvu] = 1'b1;
+        @(posedge mvu_ext_intf.clk)
+        mvu_ext_intf.wrw_en[mvu] = 1'b0;
     endtask
 
     task automatic readData(int mvu, logic unsigned [BDBANKA-1 : 0] addr, ref logic unsigned [BDBANKW-1 : 0] word, ref logic unsigned [NMVU-1 : 0] grnt);
         checkmvu(mvu);
-        barvinn_intf.cb.mvu_rdc_addr[mvu*BDBANKA +: BDBANKA] <= addr;
-        barvinn_intf.cb.mvu_rdc_en[mvu] <= 1;
-        @(posedge barvinn_intf.clk)
-        grnt[mvu] = barvinn_intf.cb.mvu_rdc_grnt[mvu];
-        barvinn_intf.cb.mvu_rdc_en[mvu] <= 0;
-        @(posedge barvinn_intf.clk)
-        @(posedge barvinn_intf.clk)
-        word = barvinn_intf.mvu_rdc_word[mvu*BDBANKW +: BDBANKW];
+        mvu_ext_intf.rdc_addr[mvu*BDBANKA +: BDBANKA] = addr;
+        mvu_ext_intf.rdc_en[mvu] = 1;
+        @(posedge mvu_ext_intf.clk)
+        grnt[mvu] = mvu_ext_intf.rdc_grnt[mvu];
+        mvu_ext_intf.rdc_en[mvu] = 0;
+        @(posedge mvu_ext_intf.clk)
+        @(posedge mvu_ext_intf.clk)
+        word = mvu_ext_intf.rdc_word[mvu*BDBANKW +: BDBANKW];
     endtask
 
     function automatic rv32_data_q process_hex_file(string hex_file, Logger logger, int nwords);
@@ -101,58 +111,85 @@ class barvinn_testbench_base extends BaseObj;
         return instr_q;
     endfunction
 
-    task write_data_to_ram(rv32_data_q data_q);
-        for (int i=0; i<data_q.size(); i++) begin
-            `hdl_path_dmem[i] = data_q[i];
+    task write_data_to_ram(int backdoor, int log_to_console);
+        logger.print($sformatf("Writing %6d data words to the Data RAM", this.rodata_q.size()));
+        if (backdoor == 1) begin
+            for (int addr=0 ; addr<this.rodata_q.size(); addr++) begin
+                `hdl_path_dmem_init[addr] = this.rodata_q[addr];
+                if(log_to_console) begin
+                    logger.print($sformatf("[%4d]: 0x%8h", addr, this.rodata_q[addr]));
+                end
+            end
+        end else begin
+            @(posedge pito_ext_intf.clk);
+            pito_ext_intf.dmem_we = 1'b1;
+            @(posedge pito_ext_intf.clk);
+            for (int addr=0; addr<this.rodata_q.size(); addr++) begin
+                @(posedge pito_ext_intf.clk);
+                pito_ext_intf.dmem_wdata = this.rodata_q[addr];
+                pito_ext_intf.dmem_addr = addr;
+                if(log_to_console) begin
+                    logger.print($sformatf("[%4d]: 0x%8h", addr, this.rodata_q[addr]));
+                end
+            end
+            @(posedge pito_ext_intf.clk);
+            pito_ext_intf.dmem_we = 1'b0;
         end
     endtask
 
     task write_instr_to_ram(int backdoor, int log_to_console);
+        logger.print($sformatf("Writing %6d instruction words to the Instruction RAM", this.instr_q.size()));
         if(log_to_console) begin
-            logger.print_banner($sformatf("Writing %6d instructions to the RAM", this.instr_q.size()));
             logger.print($sformatf(" ADDR  INSTRUCTION          INSTR TYPE       OPCODE          DECODING"));
         end
         if (backdoor == 1) begin
             for (int addr=0 ; addr<this.instr_q.size(); addr++) begin
-                `hdl_path_imem[addr] = this.instr_q[addr];
+                `hdl_path_imem_init[addr] = this.instr_q[addr];
                 if(log_to_console) begin
                     logger.print($sformatf("[%4d]: 0x%8h     %s", addr, this.instr_q[addr], rv32_utils::get_instr_str(rv32i_dec.decode_instr(this.instr_q[addr]))));
                 end
             end
         end else begin
-            @(posedge barvinn_intf.clk);
-            barvinn_intf.cb.pito_io_imem_w_en <= 1'b1;
-            @(posedge barvinn_intf.clk);
+            @(posedge pito_ext_intf.clk);
+            pito_ext_intf.imem_we = 1'b1;
+            @(posedge pito_ext_intf.clk);
             for (int addr=0; addr<instr_q.size(); addr++) begin
-                @(posedge barvinn_intf.clk);
-                barvinn_intf.cb.pito_io_imem_data <= instr_q[addr];
-                barvinn_intf.cb.pito_io_imem_addr <= addr;
+                @(posedge pito_ext_intf.clk);
+                pito_ext_intf.imem_wdata = instr_q[addr];
+                pito_ext_intf.imem_addr = addr;
                 if(log_to_console) begin
                     logger.print($sformatf("[%4d]: 0x%8h     %s", addr, instr_q[addr], rv32_utils::get_instr_str(rv32i_dec.decode_instr(instr_q[addr]))));
                 end
             end
-            @(posedge barvinn_intf.clk);
-            barvinn_intf.cb.pito_io_imem_w_en <= 1'b0;
+            @(posedge pito_ext_intf.clk);
+            pito_ext_intf.imem_we = 1'b0;
         end
     endtask
 
-    task pito_init();
-        barvinn_intf.cb.rst_n             <= 1'b1;
-        barvinn_intf.cb.pito_io_dmem_w_en <= 1'b0;
-        barvinn_intf.cb.pito_io_imem_w_en <= 1'b0;
-        barvinn_intf.cb.pito_io_imem_addr <= 32'b0;
-        barvinn_intf.cb.pito_io_dmem_addr <= 32'b0;
-        barvinn_intf.cb.pito_io_program   <= 0;
-        // barvinn_intf.mvu_irq_i         = 0;
 
-        @(posedge barvinn_intf.clk);
-        barvinn_intf.cb.rst_n <= 1'b0;
-        @(posedge barvinn_intf.clk);
+    task pito_init();
+        pito_ext_intf.rst_n        = 1'b1;
+        pito_ext_intf.dmem_we      = 1'b0;
+        pito_ext_intf.dmem_be      = 4'b1111;
+        pito_ext_intf.dmem_req     = 1'b0;
+        pito_ext_intf.dmem_addr    = {`PITO_DATA_ADDR_WIDTH{1'b0}};
+        pito_ext_intf.dmem_wdata   = 32'b0;
+        pito_ext_intf.imem_we      = 1'b0;
+        pito_ext_intf.imem_be      = 4'b1111;
+        pito_ext_intf.imem_req     = 1'b0;
+        pito_ext_intf.imem_addr    = {`PITO_INSTR_ADDR_WIDTH{1'b0}};
+        pito_ext_intf.imem_wdata   = 32'b0;
+
+        @(posedge pito_ext_intf.clk);
+        pito_ext_intf.rst_n = 1'b0;
+        @(posedge pito_ext_intf.clk);
 
         this.write_instr_to_ram(1, 0);
-        this.write_data_to_ram(instr_q);
+        this.write_data_to_ram(1, 0);
 
-        @(posedge barvinn_intf.clk);
+        @(posedge pito_ext_intf.clk);
+        pito_ext_intf.rst_n = 1'b1;
+        @(posedge pito_ext_intf.clk);
     endtask
 
     task mvu_init();
@@ -171,8 +208,8 @@ class barvinn_testbench_base extends BaseObj;
 
     virtual task run();
         logger.print_banner("Testbench Run phase");
-        @(posedge barvinn_intf.clk);
-        barvinn_intf.cb.rst_n <= 1'b1;
+        @(posedge pito_ext_intf.clk);
+        pito_ext_intf.rst_n <= 1'b1;
         // @(posedge barvinn_intf.clk);
     endtask 
 
