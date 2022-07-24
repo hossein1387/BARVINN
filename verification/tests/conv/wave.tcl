@@ -2,20 +2,34 @@ add_wave_group soc
     add_wave_group -into soc soc_ext_intf
         add_wave -into soc_ext_intf {{/testbench_top/pito_intf/clk}}
         add_wave -into soc_ext_intf {{/testbench_top/pito_intf/rst_n}}
-        add_wave -into soc_ext_intf {{/testbench_top/pito_intf/dmem_wdata}}
-        add_wave -into soc_ext_intf {{/testbench_top/pito_intf/dmem_rdata}}
-        add_wave -into soc_ext_intf {{/testbench_top/pito_intf/dmem_addr}}
-        add_wave -into soc_ext_intf {{/testbench_top/pito_intf/dmem_req}}
-        add_wave -into soc_ext_intf {{/testbench_top/pito_intf/dmem_we}}
-        add_wave -into soc_ext_intf {{/testbench_top/pito_intf/dmem_be}}
-        add_wave -into soc_ext_intf {{/testbench_top/pito_intf/imem_wdata}}
-        add_wave -into soc_ext_intf {{/testbench_top/pito_intf/imem_rdata}}
-        add_wave -into soc_ext_intf {{/testbench_top/pito_intf/imem_addr}}
-        add_wave -into soc_ext_intf {{/testbench_top/pito_intf/imem_req}}
-        add_wave -into soc_ext_intf {{/testbench_top/pito_intf/imem_we}}
-        add_wave -into soc_ext_intf {{/testbench_top/pito_intf/imem_be}}
-        add_wave -into soc_ext_intf {{/testbench_top/pito_intf/uart_rx}}
-        add_wave -into soc_ext_intf {{/testbench_top/pito_intf/uart_tx}}
+        add_wave_group -into soc_ext_intf mem_interface
+            add_wave -into mem_interface {{/testbench_top/pito_intf/dmem_wdata}}
+            add_wave -into mem_interface {{/testbench_top/pito_intf/dmem_rdata}}
+            add_wave -into mem_interface {{/testbench_top/pito_intf/dmem_addr}}
+            add_wave -into mem_interface {{/testbench_top/pito_intf/dmem_req}}
+            add_wave -into mem_interface {{/testbench_top/pito_intf/dmem_we}}
+            add_wave -into mem_interface {{/testbench_top/pito_intf/dmem_be}}
+            add_wave -into mem_interface {{/testbench_top/pito_intf/imem_wdata}}
+            add_wave -into mem_interface {{/testbench_top/pito_intf/imem_rdata}}
+            add_wave -into mem_interface {{/testbench_top/pito_intf/imem_addr}}
+            add_wave -into mem_interface {{/testbench_top/pito_intf/imem_req}}
+            add_wave -into mem_interface {{/testbench_top/pito_intf/imem_we}}
+            add_wave -into mem_interface {{/testbench_top/pito_intf/imem_be}}
+        add_wave_group -into soc_ext_intf uart
+            add_wave -into uart {{/testbench_top/pito_intf/uart_rx}}
+            add_wave -into uart {{/testbench_top/pito_intf/uart_tx}}
+        add_wave_group -into soc_ext_intf mvu
+            add_wave -into mvu {{/testbench_top/pito_intf/mvu_irq}}
+            add_wave -into mvu {{/testbench_top/barvinn_inst/soc/mvu_apb/paddr}}
+            add_wave -into mvu {{/testbench_top/barvinn_inst/soc/mvu_apb/pprot}}
+            add_wave -into mvu {{/testbench_top/barvinn_inst/soc/mvu_apb/psel}}
+            add_wave -into mvu {{/testbench_top/barvinn_inst/soc/mvu_apb/penable}}
+            add_wave -into mvu {{/testbench_top/barvinn_inst/soc/mvu_apb/pwrite}}
+            add_wave -into mvu {{/testbench_top/barvinn_inst/soc/mvu_apb/pwdata}}
+            add_wave -into mvu {{/testbench_top/barvinn_inst/soc/mvu_apb/pstrb}}
+            add_wave -into mvu {{/testbench_top/barvinn_inst/soc/mvu_apb/pready}}
+            add_wave -into mvu {{/testbench_top/barvinn_inst/soc/mvu_apb/prdata}}
+            add_wave -into mvu {{/testbench_top/barvinn_inst/soc/mvu_apb/pslverr}}
     add_wave_group -into soc pito
         add_wave -into pito {{/testbench_top/barvinn_inst/soc/mem_out_bound}}
         add_wave -into pito {{/testbench_top/barvinn_inst/soc/pito/imem_wdata}}

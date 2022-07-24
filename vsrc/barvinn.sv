@@ -67,8 +67,4 @@ module barvinn #(
     pito_soc soc(.ext_intf(pito_ext_intf.soc_ext), 
                  .mvu_apb(apb_interface.Master));
 
-    always @(posedge mvu_ext_intf.irq[0]) begin
-        $display($sformatf("IRQ is sent!, S0=%0d, SP=%0d", `hdl_path_top.regfile.genblk1[0].regfile.data[8], `hdl_path_top.regfile.genblk1[0].regfile.data[2]));
-    end
-
 endmodule
