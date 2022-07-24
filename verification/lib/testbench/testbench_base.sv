@@ -25,7 +25,7 @@ class barvinn_testbench_base extends BaseObj;
     logic predictor_silent_mode;
 
 
-    function new (Logger logger, virtual MVU_EXT_INTERFACE mvu_ext_intf, virtual pito_soc_ext_interface pito_ext_intf, int hart_mon_en[$]={}, logic predictor_silent_mode=0, logic rv_reg_tests=0);
+    function new (Logger logger, virtual MVU_EXT_INTERFACE mvu_ext_intf, virtual pito_soc_ext_interface pito_ext_intf, int hart_mon_en[$]={}, logic predictor_silent_mode=1, logic rv_reg_tests=0);
     super.new(logger);
         cfg = new(logger);
         void'(cfg.parse_args());

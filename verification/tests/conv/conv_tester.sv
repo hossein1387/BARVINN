@@ -8,12 +8,18 @@ class conv_tester extends barvinn_testbench_base;
     endfunction
 
     task tb_setup();
+        logger.print_banner("Testbench Setup Phase");
         // Weight tensor that was written into MVU rams
         // w_data_q_t w_data;
         // write_weight_data("/users/hemmat/MyRepos/BARVINN/weight.txt", 0, 0, w_data);
-        super.tb_setup();
         write_weight_data("/users/hemmat/MyRepos/BARVINN/verification/tests/conv/weight.hex", 0, 0);
         write_input_data("/users/hemmat/MyRepos/BARVINN/verification/tests/conv/input.hex", 0, 0);
+        // Put DUT to reset and relax memory interface
+        logger.print("Initializing MVUs...");
+        super.mvu_init();
+        logger.print("Initializing RISC-V cores ...");
+        super.pito_init();
+        logger.print("Setup Phase Done ...");
     endtask
 
     // Given an input weight file in transposed format, this function
@@ -138,7 +144,7 @@ class conv_tester extends barvinn_testbench_base;
 
     task run();
         // Kick start the MVU and pito
-        super.run();
+        // super.run();
         fork
             this.monitor.run();
             // monitor_regs();

@@ -102,8 +102,8 @@ targets:
         description: Simulate the design
         tools: 
             xsim:
-                xelab_options: [--debug, typical, -L, secureip, -L, unisims_ver, -L, unimacro_ver, -L, work.glbl, -L, blk_mem_gen_v8_4_3, --timescale, 1ns/1ps]
-        parameters: [XILINX, firmware]
+                xelab_options: [--debug, typical, -L, secureip, -L, unisims_ver, -L, unimacro_ver, -L, work.glbl, -L, blk_mem_gen_v8_4_3, --timescale, 1ns/1ps, --define, SIMULATION_MODE]
+        parameters: [XILINX, firmware, rodata]
         toplevel: testbench_top
     synth:
         description: Synthesize the design for an FPGA board
@@ -123,10 +123,10 @@ parameters:
         paramtype : vlogdefine
     firmware:
         datatype  : file
-        default   : /users/hemmat/MyRepos/BARVINN/csrc/conv/simple_conv_text.hex
+        default   : /users/hemmat/MyRepos/BARVINN/csrc/conv/build/conv_text.hex
         paramtype : plusarg
     rodata:
         datatype  : file
-        default   : /users/hemmat/MyRepos/BARVINN/csrc/conv/simple_conv_data.hex
+        default   : /users/hemmat/MyRepos/BARVINN/csrc/conv/build/conv_data.hex
         paramtype : plusarg
 
