@@ -59,6 +59,14 @@ filesets:
             - vsrc/data_transposer.sv
             - vsrc/barvinn.sv
 
+    synth_xilinx:
+        file_type: xci
+        files:
+            - deps/MVU/ip/build/xilinx/bram2m_xilinx/bram2m_xilinx.xci
+            - deps/MVU/ip/build/xilinx/bram64k_64x1024_xilinx/bram64k_64x1024_xilinx.xci
+            - deps/MVU/mvu.xdc:
+                file_type: xdc
+
     tb:
         file_type: systemVerilogSource
         files:
@@ -109,11 +117,13 @@ targets:
         description: Synthesize the design for an FPGA board
         filesets:
             - rtl
+            - synth_xilinx
         default_tool: vivado
         tools:
           vivado:
-            part: xcku115-flva1517-2-e
+            part: xcvu9p-flgb2104-2-e
             pnr: none
+            flatten_hierarchy: none
         parameters: [XILINX]
         toplevel: [barvinn]
 parameters:
