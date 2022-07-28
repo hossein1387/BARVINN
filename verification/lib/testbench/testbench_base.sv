@@ -112,7 +112,14 @@ class barvinn_testbench_base extends BaseObj;
     endfunction
 
     task write_data_to_ram(int backdoor, int log_to_console);
-        logger.print($sformatf("Writing %6d data words to the Data RAM", this.rodata_q.size()));
+        real percentile=0;
+        percentile = real'(this.rodata_q.size())/real'(`PITO_DATA_MEM_SIZE) * 100.0;
+        logger.print($sformatf("Writing %6d (%2.2f\%) instruction words to the Dara RAM", this.rodata_q.size(), percentile));
+        if (this.instr_q.size()>=`PITO_DATA_MEM_SIZE) begin
+            logger.print("Memory instruction is FULL. Aborting simulation");
+            $finish();
+        end
+
         if (backdoor == 1) begin
             for (int addr=0 ; addr<this.rodata_q.size(); addr++) begin
                 `hdl_path_dmem_init[addr] = this.rodata_q[addr];
@@ -138,7 +145,13 @@ class barvinn_testbench_base extends BaseObj;
     endtask
 
     task write_instr_to_ram(int backdoor, int log_to_console);
-        logger.print($sformatf("Writing %6d instruction words to the Instruction RAM", this.instr_q.size()));
+        real percentile=0;
+        percentile = real'(this.instr_q.size())/real'(`PITO_INSTR_MEM_SIZE) * 100.0;
+        logger.print($sformatf("Writing %6d (%2.2f\%) instruction words to the Instruction RAM", this.instr_q.size(), percentile));
+        if (this.instr_q.size()>=`PITO_INSTR_MEM_SIZE) begin
+            logger.print("Memory instruction is FULL. Aborting simulation");
+            $finish();
+        end
         if(log_to_console) begin
             logger.print($sformatf(" ADDR  INSTRUCTION          INSTR TYPE       OPCODE          DECODING"));
         end
@@ -216,7 +229,7 @@ class barvinn_testbench_base extends BaseObj;
     virtual task report();
         test_stats_t test_stat = this.monitor.get_results();
         logger.print_banner("Testbench Report phase");
-        print_result(test_stat, VERB_LOW, logger);
+        print_result(test_stat, VERB_MEDIUM, logger);
     endtask 
 
 endclass

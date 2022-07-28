@@ -164,16 +164,28 @@ add_wave_group core
         add_wave -into WFStage {{/testbench_top/barvinn_inst/soc/pito/rv32_regf_wen}}
         add_wave -into WFStage {{/testbench_top/barvinn_inst/soc/pito/rv32_regf_wa}}
         add_wave -into WFStage {{/testbench_top/barvinn_inst/soc/pito/rv32_wf_is_load}}
-    add_wave_group -into WFStage Next_PC
-            add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/rv32_alu_res}}
-            add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/rv32_rs1}}
-            add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/rv32_imm}}
-            add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/rv32_instr_opcode}}
-            add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/rv32_cur_pc}}
-            add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/rv32_save_pc}}
-            add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/rv32_has_new_pc}}
-            add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/rv32_reg_pc}}
-            add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/rv32_next_pc_val}}
+    add_wave_group -into core Next_PC
+        add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/csr_irq_evt}}
+        add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/hart_id_i}}
+        add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/irq_queue_d}}
+        add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/irq_queue_q}}
+        add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/irq_data_ptr_d}}
+        add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/irq_data_ptr_q}}
+        add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/rv32_alu_res}}
+        add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/rv32_rs1}}
+        add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/rv32_imm}}
+        add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/rv32_instr_opcode}}
+        add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/rv32_cur_pc}}
+        add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/rv32_save_pc}}
+        add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/rv32_has_new_pc}}
+        add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/rv32_reg_pc}}
+        add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/rv32_next_pc_val}}
+        add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/rv32_next_pc}}
+        add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/rv32_new_pc}}
+        add_wave -into Next_PC {{/testbench_top/barvinn_inst/soc/pito/rv32_next_pc_cal/IrqQueueDepth}}
+
+
+
 add_wave_group decoder
     add_wave -into decoder {{/testbench_top/barvinn_inst/soc/pito/decoder}} 
 add_wave_group regfile
@@ -214,6 +226,20 @@ add_wave_group pipeline
 add_wave_group csr
     add_wave_group -into csr csr0
             add_wave -into csr0 {{/testbench_top/barvinn_inst/soc/pito/csr/\genblk1[0].csrfile }}
+    add_wave_group -into csr csr1
+            add_wave -into csr1 {{/testbench_top/barvinn_inst/soc/pito/csr/\genblk1[1].csrfile }}
+    add_wave_group -into csr csr2
+            add_wave -into csr2 {{/testbench_top/barvinn_inst/soc/pito/csr/\genblk1[2].csrfile }}
+    add_wave_group -into csr csr3
+            add_wave -into csr3 {{/testbench_top/barvinn_inst/soc/pito/csr/\genblk1[3].csrfile }}
+    add_wave_group -into csr csr4
+            add_wave -into csr4 {{/testbench_top/barvinn_inst/soc/pito/csr/\genblk1[4].csrfile }}
+    add_wave_group -into csr csr5
+            add_wave -into csr5 {{/testbench_top/barvinn_inst/soc/pito/csr/\genblk1[5].csrfile }}
+    add_wave_group -into csr csr6
+            add_wave -into csr6 {{/testbench_top/barvinn_inst/soc/pito/csr/\genblk1[6].csrfile }}
+    add_wave_group -into csr csr7
+            add_wave -into csr7 {{/testbench_top/barvinn_inst/soc/pito/csr/\genblk1[7].csrfile }}
 add_wave_group mems
     set_property display_limit 3000000 [current_wave_config]
     add_wave_group -into mems i_mem

@@ -3,17 +3,33 @@
 
 #define N 8
 extern int get_pito_hart_id();
-extern void set_csr(int csr_addr, int csr_val);
-int hart_id_cnt=7;
+extern void wait_for_mvu_irq();
+extern void enable_mvu_irq();
+extern void conv_0();
+int loop_cnt=0;
+int done = 0;
+static void irq_handler(void) __attribute__ ((interrupt ("machine")));
 
-void main_thread(int hart_id){
-    int cnt_val = 1;
-    while(hart_id_cnt!=-1){
-        if (hart_id==hart_id_cnt){
-            printf("Hello World from HART:%d\n", hart_id);
-            hart_id_cnt = hart_id_cnt -1;
-            cnt_val = cnt_val + hart_id;
-            SET_CSR(CSR_MVUCOMMAND, cnt_val);
+void irq_handler(){
+    // First things first, disable mvu interrupt ...
+    // Clear peending interrup
+    __asm__ volatile("addi t1, x0, 1 \n\t\
+                     slli t1, t1, 16 \n\t\
+                     csrc mip, t1");
+    // printf("Done with loop %d\n", loop_cnt);
+    // Enable global interrupt now that we are all done
+    loop_cnt += 1;
+    enable_mvu_irq();
+}
+
+void main_thread(const int hart_id){
+    SET_CSR(mtvec, &irq_handler);
+    enable_mvu_irq();
+    printf("Waking up HART:%d\n", hart_id);
+    while(done==0){
+        if (hart_id==0){
+            conv_0();
+            done =1;
         }
     }
 }

@@ -1,6 +1,8 @@
 `include "testbench_base.sv"
 `include "testbench_macros.svh"
 
+import utils::*;
+
 class conv_tester extends barvinn_testbench_base;
 
     function new(Logger logger, virtual MVU_EXT_INTERFACE mvu_ext_intf, virtual pito_soc_ext_interface pito_intf);
@@ -114,7 +116,7 @@ class conv_tester extends barvinn_testbench_base;
         return val;
     endfunction
 
-    task dump_output_data(input string output_file, input int mvu_num, input logic [BDBANKA-1 : 0] base_addr, input int words_to_read);
+    task dump_output_data(input string output_file, input int mvu_num, input logic [BDBANKA-1 : 0] base_addr, input int words_to_read, input print_verbosity_t verbosity);
         logic grnt;
         int fd = $fopen (output_file, "w");
         a_data_t temp_dat;
@@ -135,11 +137,14 @@ class conv_tester extends barvinn_testbench_base;
                 bank_num = addr%1024;
             end
             mem_val = get_mvu_bank_val(mvu_num, bank_num, addr);
-            logger.print($sformatf("[%4h]: 0x%16h", addr, mem_val));
+            logger.print($sformatf("[%4h]: 0x%16h", addr, mem_val), "INFO", verbosity);
             $fwrite(fd,"%16h\n", mem_val);
             addr += 1;
             word_cnt += 1;
         end
+    endtask
+
+    task external_mem_model();
     endtask
 
     task run();
@@ -148,6 +153,7 @@ class conv_tester extends barvinn_testbench_base;
         fork
             this.monitor.run();
             // monitor_regs();
+            // external_mem_model();
         join_any
     endtask
 
@@ -155,7 +161,7 @@ class conv_tester extends barvinn_testbench_base;
         string output_file = "result.hex";
         super.report();
         logger.print($sformatf("dumping results into %s ...", output_file));
-        dump_output_data(output_file, 0, 0, 4096);
+        dump_output_data(output_file, 0, 0, 4096, utils::VERB_LOW);
     endtask
 
 endclass
