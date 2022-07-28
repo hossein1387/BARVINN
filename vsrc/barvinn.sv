@@ -1,7 +1,6 @@
 `timescale 1ns/1ps
 
 `include "rv32_defines.svh"
-`include "testbench_macros.svh"
 
 import mvu_pkg::*;
 import rv32_pkg::*;
