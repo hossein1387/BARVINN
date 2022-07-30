@@ -10,17 +10,21 @@ RUNTIME_OBJS := $(notdir $(basename $(RUNTIME))).o
 STDLIB_SRC := $(shell find $(COMMON_DIR) -name "*.c")
 STDLIB_OBJS := $(addsuffix .o, $(notdir $(basename $(STDLIB_SRC))))
 OUT_DIR := $(ROOT_DIR)/build/
+INCLUDE_DIR:= $(ROOT_DIR)/include/
 HDRFILES := $(addprefix -I, $(shell find $(INCLUDE_DIR) -name "*.h"))
 SRCFILES := $(shell find $(SRC_DIR) -name "*.c")
 SRC_OBJS := $(addsuffix .o, $(notdir $(basename $(SRCFILES))))
 OBJS = $$(find $(OUT_DIR) -name "*.o")
 #=================================================================================
-# Making GCC Acronyms
+# Compiler Flags
 #=================================================================================
 
 LDFLAGS = -nostartfiles  -nostdlib  -T$(ROOT_DIR)/common/link.ld -Map=$(OUT_DIR)/$(PROJ).map
 CCFLAGS = -march=rv32i -std=gnu99 -ffast-math -fno-builtin-printf
-
+#=================================================================================
+# Project Defines
+#=================================================================================
+RUNTIME_MODE = STREAM # two modes are possible: streaming mode, batch mode
 #=================================================================================
 # GCC Acronyms
 #=================================================================================
@@ -52,7 +56,7 @@ prep:
 	@mkdir -p $(OUT_DIR)
 
 %.o: $(SRC_DIR)/%.c
-	$(CC) $(CCFLAGS) -I$(COMMON_DIR) $(HDRFILES) -c $< -o $(OUT_DIR)/$@
+	$(CC) $(CCFLAGS) -I$(COMMON_DIR) -I$(INCLUDE_DIR) -D $(RUNTIME_MODE) -c $< -o $(OUT_DIR)/$@
 
 .PHONY: clean
 clean:

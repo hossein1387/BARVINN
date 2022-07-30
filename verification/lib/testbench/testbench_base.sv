@@ -114,7 +114,7 @@ class barvinn_testbench_base extends BaseObj;
     task write_data_to_ram(int backdoor, int log_to_console);
         real percentile=0;
         percentile = real'(this.rodata_q.size())/real'(`PITO_DATA_MEM_SIZE) * 100.0;
-        logger.print($sformatf("Writing %6d (%2.2f\%) instruction words to the Dara RAM", this.rodata_q.size(), percentile));
+        logger.print($sformatf("Writing %6d (%2.2f)%% instruction words to the Dara RAM", this.rodata_q.size(), percentile));
         if (this.instr_q.size()>=`PITO_DATA_MEM_SIZE) begin
             logger.print("Memory instruction is FULL. Aborting simulation");
             $finish();
@@ -147,7 +147,7 @@ class barvinn_testbench_base extends BaseObj;
     task write_instr_to_ram(int backdoor, int log_to_console);
         real percentile=0;
         percentile = real'(this.instr_q.size())/real'(`PITO_INSTR_MEM_SIZE) * 100.0;
-        logger.print($sformatf("Writing %6d (%2.2f\%) instruction words to the Instruction RAM", this.instr_q.size(), percentile));
+        logger.print($sformatf("Writing %6d (%2.2f)%% instruction words to the Instruction RAM", this.instr_q.size(), percentile));
         if (this.instr_q.size()>=`PITO_INSTR_MEM_SIZE) begin
             logger.print("Memory instruction is FULL. Aborting simulation");
             $finish();
