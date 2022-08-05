@@ -1,6 +1,8 @@
-import utils::*;
+// `include "matmul_tester.sv"
+`include "conv_tester.sv"
 
-module testbench_top();
+
+module testbench_top import utils::*;();
 //==================================================================================================
 // Test variables
     localparam CLOCK_SPEED = 50; // 10MHZ
@@ -8,19 +10,17 @@ module testbench_top();
     string sim_log_file = "testbench_top.log";
 //==================================================================================================
     logic clk;
-    pito_interface pito_inf(clk);
-    mvu_interface mvu_inf(clk);
-    accel_interface barvinn_inf(clk);
-    barvinn barvinn_inst(.rv_intf(pito_inf),
-                      .mvu_intf(mvu_inf),
-                      .accel_inf(accel_inf));
-
+    pito_soc_ext_interface pito_intf(clk);
+    MVU_EXT_INTERFACE mvu_intf(clk);
+    barvinn barvinn_inst(.pito_ext_intf(pito_intf),
+                         .mvu_ext_intf(mvu_intf));
+                     
     // interface_tester tb;
-    core_tester tb;
+    conv_tester tb;
 
     initial begin
         logger = new(sim_log_file);
-        tb = new(logger, pito_inf.tb_interface);
+        tb = new(logger, mvu_intf, pito_intf);
 
         tb.tb_setup();
         tb.run();
@@ -41,7 +41,7 @@ module testbench_top();
     end
 
     initial begin
-        #1ms;
+        #1000ms;
         $display("Simulation took more than expected ( more than 600ms)");
         $finish();
     end

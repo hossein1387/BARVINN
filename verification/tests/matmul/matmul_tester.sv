@@ -1,27 +1,19 @@
 `include "testbench_base.sv"
-`include "testbench_macros.svh"
 
-import utils::*;
+`define hdl_path_mvu0_mem_1 testbench_top.barvinn_inst.mvu.mvuarray[0].mvunit.bankarray[1].db.b.inst.native_mem_module.blk_mem_gen_v8_4_3_inst.memory
+class matmul_tester extends barvinn_testbench_base;
 
-class conv_tester extends barvinn_testbench_base;
-
-    function new(Logger logger, virtual MVU_EXT_INTERFACE mvu_ext_intf, virtual pito_soc_ext_interface pito_intf);
-        super.new(logger, mvu_ext_intf, pito_intf);
+    function new(Logger logger, virtual barvinn_interface barvinn_intf, virtual pito_interface pito_intf);
+        super.new(logger, barvinn_intf, pito_intf);
     endfunction
 
     task tb_setup();
-        logger.print_banner("Testbench Setup Phase");
         // Weight tensor that was written into MVU rams
         // w_data_q_t w_data;
         // write_weight_data("/users/hemmat/MyRepos/BARVINN/weight.txt", 0, 0, w_data);
-        write_weight_data("/users/hemmat/MyRepos/BARVINN/verification/tests/conv/weight.hex", 0, 0);
-        write_input_data("/users/hemmat/MyRepos/BARVINN/verification/tests/conv/input.hex", 0, 0);
-        // Put DUT to reset and relax memory interface
-        logger.print("Initializing MVUs...");
-        super.mvu_init();
-        logger.print("Initializing RISC-V cores ...");
-        super.pito_init();
-        logger.print("Setup Phase Done ...");
+        super.tb_setup();
+        write_weight_data("/users/hemmat/MyRepos/BARVINN/verification/tests/matmul/weight.hex", 0, 0);
+        write_input_data("/users/hemmat/MyRepos/BARVINN/verification/tests/matmul/input.hex", 0, 0);
     endtask
 
     // Given an input weight file in transposed format, this function
@@ -77,53 +69,13 @@ class conv_tester extends barvinn_testbench_base;
         end
     endtask
 
-    function int get_mvu_bank_val (mvu, bank_num, addr);
-        int val = 0;
-        case (bank_num)
-            0 : begin val = `hdl_path_mvu0_mem_0[addr]; end
-            1 : begin val = `hdl_path_mvu0_mem_1[addr]; end
-            2 : begin val = `hdl_path_mvu0_mem_2[addr]; end
-            3 : begin val = `hdl_path_mvu0_mem_3[addr]; end
-            4 : begin val = `hdl_path_mvu0_mem_4[addr]; end
-            5 : begin val = `hdl_path_mvu0_mem_5[addr]; end
-            6 : begin val = `hdl_path_mvu0_mem_6[addr]; end
-            7 : begin val = `hdl_path_mvu0_mem_7[addr]; end
-            8 : begin val = `hdl_path_mvu0_mem_8[addr]; end
-            9 : begin val = `hdl_path_mvu0_mem_9[addr]; end
-            10: begin val = `hdl_path_mvu0_mem_10[addr]; end
-            11: begin val = `hdl_path_mvu0_mem_11[addr]; end
-            12: begin val = `hdl_path_mvu0_mem_12[addr]; end
-            13: begin val = `hdl_path_mvu0_mem_13[addr]; end
-            14: begin val = `hdl_path_mvu0_mem_14[addr]; end
-            15: begin val = `hdl_path_mvu0_mem_15[addr]; end
-            16: begin val = `hdl_path_mvu0_mem_16[addr]; end
-            17: begin val = `hdl_path_mvu0_mem_17[addr]; end
-            18: begin val = `hdl_path_mvu0_mem_18[addr]; end
-            19: begin val = `hdl_path_mvu0_mem_19[addr]; end
-            20: begin val = `hdl_path_mvu0_mem_20[addr]; end
-            21: begin val = `hdl_path_mvu0_mem_21[addr]; end
-            22: begin val = `hdl_path_mvu0_mem_22[addr]; end
-            23: begin val = `hdl_path_mvu0_mem_23[addr]; end
-            24: begin val = `hdl_path_mvu0_mem_24[addr]; end
-            25: begin val = `hdl_path_mvu0_mem_25[addr]; end
-            26: begin val = `hdl_path_mvu0_mem_26[addr]; end
-            27: begin val = `hdl_path_mvu0_mem_27[addr]; end
-            28: begin val = `hdl_path_mvu0_mem_28[addr]; end
-            29: begin val = `hdl_path_mvu0_mem_29[addr]; end
-            30: begin val = `hdl_path_mvu0_mem_30[addr]; end
-            31: begin val = `hdl_path_mvu0_mem_31[addr]; end
-        endcase
-        return val;
-    endfunction
 
-    task dump_output_data(input string output_file, input int mvu_num, input logic [BDBANKA-1 : 0] base_addr, input int words_to_read, input print_verbosity_t verbosity);
+    task dump_output_data(input string output_file, input int mvu, input logic [BDBANKA-1 : 0] base_addr, input int words_to_read);
         logic grnt;
         int fd = $fopen (output_file, "w");
         a_data_t temp_dat;
         logic [BDBANKA-1 : 0] addr = base_addr;
         int word_cnt = 0;
-        int bank_num = 0;
-        int mem_val;
         if (fd)  begin logger.print($sformatf("%s was opened successfully : %0d", output_file, fd)); end
         else     begin logger.print($sformatf("%s was NOT opened successfully : %0d", output_file, fd)); $finish(); end
         logger.print($sformatf("=> Reading output ram ..."));
@@ -131,29 +83,19 @@ class conv_tester extends barvinn_testbench_base;
             // data_q.push_back(temp_dat);
             // readData(int mvu, logic unsigned [BDBANKA-1 : 0] addr, ref logic unsigned [BDBANKW-1 : 0] word, ref logic unsigned [NMVU-1 : 0] grnt);
             // readData(mvu, addr, temp_dat, grnt);
-            if (addr>1023) begin
-                bank_num = 0;
-            end else begin
-                bank_num = addr%1024;
-            end
-            mem_val = get_mvu_bank_val(mvu_num, bank_num, addr);
-            logger.print($sformatf("[%4h]: 0x%16h", addr, mem_val), "INFO", verbosity);
-            $fwrite(fd,"%16h\n", mem_val);
+            logger.print($sformatf("[%4h]: 0x%16h", addr, `hdl_path_mvu0_mem_1[addr]));
+            $fwrite(fd,"%16h\n",`hdl_path_mvu0_mem_1[addr]);
             addr += 1;
             word_cnt += 1;
         end
     endtask
 
-    task external_mem_model();
-    endtask
-
     task run();
         // Kick start the MVU and pito
-        // super.run();
+        super.run();
         fork
             this.monitor.run();
             // monitor_regs();
-            // external_mem_model();
         join_any
     endtask
 
@@ -161,7 +103,7 @@ class conv_tester extends barvinn_testbench_base;
         string output_file = "result.hex";
         super.report();
         logger.print($sformatf("dumping results into %s ...", output_file));
-        dump_output_data(output_file, 0, 0, 4096, utils::VERB_LOW);
+        dump_output_data(output_file, 0, 0, 8192);
     endtask
 
 endclass

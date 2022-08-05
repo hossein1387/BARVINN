@@ -1,4 +1,4 @@
-`timescale 1 ps / 1 ps
+`timescale 1ns/1ps
     // Data transposer's job is to write input data (that is stored in a processor RAM
     // in linear format) into MVU RAM in a transposed format. The input word can be packed
     // of 2,4,8 or 16 bits data. Given the input data precision (prec) the transposer will
@@ -42,8 +42,8 @@
 module data_transposer #(
     parameter  NUM_WORDS    =  64,   // Number of words needed before transpose 
     parameter  XLEN         =  32,   // Length of each input word
-    parameter  MVU_ADDR_LEN =  32,   // MVU address length
-    parameter  MVU_DATA_LEN =  32,   // MVU data length
+    parameter  MVU_ADDR_LEN =  15,   // MVU address length
+    parameter  MVU_DATA_LEN =  64,   // MVU data length
     parameter  MAX_DATA_PREC=  16     // MAX data precision
 )(
     input  logic                      clk,         // Clock

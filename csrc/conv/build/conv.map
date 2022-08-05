@@ -1,0 +1,387 @@
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+PITO_DATA        0x0000000000202000 0x0000000000002000 arw !x
+PITO_INSTR       0x0000000000200000 0x0000000000002000 axr
+IO               0x0000000080000000 0x0000000000000010 rw !x
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+                0x0000000000200000                . = ORIGIN (PITO_INSTR)
+                [!provide]                        PROVIDE (__stext = .)
+                [!provide]                        PROVIDE (_stext = .)
+                [!provide]                        PROVIDE (stext = .)
+                0x0000000000200000                PROVIDE (_start = .)
+
+.init           0x0000000000200000      0x140
+ *(SORT_NONE(.init))
+ .init          0x0000000000200000      0x140 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/crt0.o
+                0x0000000000200138                get_pito_hart_id
+
+.text           0x0000000000200140      0x8bc
+ *(.text.unlikely .text.*_unlikely .text.unlikely.*)
+ *(.text.exit .text.exit.*)
+ .text.exit     0x0000000000200140       0x50 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/crt0.o
+                0x0000000000200140                exit
+ *(.text.startup .text.startup.*)
+ *(.text.hot .text.hot.*)
+ *(.text .stub .text.* .gnu.linkonce.t.*)
+ .text          0x0000000000200190       0x1c /users/hemmat/MyRepos/BARVINN/csrc/conv/build/conv.o
+                0x0000000000200190                conv_cv0
+ .text          0x00000000002001ac       0xbc /users/hemmat/MyRepos/BARVINN/csrc/conv/build/main.o
+                0x00000000002001ac                main_thread
+                0x0000000000200230                main
+ .text          0x0000000000200268        0x0 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/crt0.o
+ *fill*         0x0000000000200268        0x8 
+ .text.math     0x0000000000200270       0xb8 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/crt0.o
+                0x0000000000200270                __mulsi3
+                0x00000000002002a0                __udivsi3
+                0x0000000000200310                __umodsi3
+ *fill*         0x0000000000200328        0x8 
+ .text.io       0x0000000000200330       0x24 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/crt0.o
+                0x0000000000200330                putchar
+ .text.main     0x0000000000200354        0x8 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/crt0.o
+ .text          0x000000000020035c      0x6a0 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/stdio.o
+                0x000000000020035c                putstr
+                0x00000000002003c0                puts
+                0x00000000002003fc                printf
+                0x0000000000200540                putnum
+                0x00000000002006bc                strncmp
+                0x0000000000200758                strcmp
+                0x0000000000200798                strlen
+                0x00000000002007ec                memcpy
+                0x0000000000200854                memset
+                0x00000000002008b4                atoi
+                0x0000000000200960                xtoi
+ *(.gnu.warning)
+
+.fini
+ *(SORT_NONE(.fini))
+                [!provide]                        PROVIDE (__etext = .)
+                [!provide]                        PROVIDE (_etext = .)
+                [!provide]                        PROVIDE (etext = .)
+                0x0000000000202000                . = ORIGIN (PITO_DATA)
+
+.preinit_array  0x0000000000202000        0x0
+                0x0000000000202000                PROVIDE (__preinit_array_start = .)
+ *(.preinit_array)
+                0x0000000000202000                PROVIDE (__preinit_array_end = .)
+
+.init_array     0x0000000000202000        0x0
+                0x0000000000202000                PROVIDE (__init_array_start = .)
+ *(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*))
+ *(.init_array EXCLUDE_FILE(*crtend?.o *crtend.o *crtbegin?.o *crtbegin.o) .ctors)
+                0x0000000000202000                PROVIDE (__init_array_end = .)
+
+.fini_array     0x0000000000202000        0x0
+                0x0000000000202000                PROVIDE (__fini_array_start = .)
+ *(SORT_BY_INIT_PRIORITY(.fini_array.*) SORT_BY_INIT_PRIORITY(.dtors.*))
+ *(.fini_array EXCLUDE_FILE(*crtend?.o *crtend.o *crtbegin?.o *crtbegin.o) .dtors)
+                0x0000000000202000                PROVIDE (__fini_array_end = .)
+
+.ctors
+ *crtbegin.o(.ctors)
+ *crtbegin?.o(.ctors)
+ *(EXCLUDE_FILE(*crtend?.o *crtend.o) .ctors)
+ *(SORT_BY_NAME(.ctors.*))
+ *(.ctors)
+
+.dtors
+ *crtbegin.o(.dtors)
+ *crtbegin?.o(.dtors)
+ *(EXCLUDE_FILE(*crtend?.o *crtend.o) .dtors)
+ *(SORT_BY_NAME(.dtors.*))
+ *(.dtors)
+
+.eh_frame_hdr
+ *(.eh_frame_hdr)
+ *(.eh_frame_entry .eh_frame_entry.*)
+
+.eh_frame
+ *(.eh_frame)
+ *(.eh_frame.*)
+
+.gcc_except_table
+ *(.gcc_except_table .gcc_except_table.*)
+
+.gnu_extab
+ *(.gnu_extab*)
+
+.data           0x0000000000202000        0x0
+                0x0000000000202000                __DATA_BEGIN__ = .
+ *(.data .data.* .gnu.linkonce.d.*)
+ .data          0x0000000000202000        0x0 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/conv.o
+ .data          0x0000000000202000        0x0 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/main.o
+ .data          0x0000000000202000        0x0 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/crt0.o
+ .data          0x0000000000202000        0x0 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/stdio.o
+
+.rodata         0x0000000000202000       0x65
+ *(.rodata .rodata.* .gnu.linkonce.r.*)
+ .rodata        0x0000000000202000       0x1a /users/hemmat/MyRepos/BARVINN/csrc/conv/build/main.o
+ .rodata.str1.1
+                0x000000000020201a       0x31 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/crt0.o
+ *fill*         0x000000000020204b        0x1 
+ .rodata        0x000000000020204c       0x19 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/stdio.o
+
+.data1
+ *(.data1)
+
+.rodata1
+ *(.rodata1)
+
+.data.rel.ro
+ *(.data.rel.ro.local* .gnu.linkonce.d.rel.ro.local.*)
+ *(.data.rel.ro .data.rel.ro.* .gnu.linkonce.d.rel.ro.*)
+
+.sdata          0x0000000000202068        0x4
+                0x0000000000202068                __SDATA_BEGIN__ = .
+ *(.srodata.cst16)
+ *(.srodata.cst8)
+ *(.srodata.cst4)
+ *(.srodata.cst2)
+ *(.srodata .srodata.*)
+ *(.sdata .sdata.* .gnu.linkonce.s.*)
+ .sdata         0x0000000000202068        0x4 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/main.o
+                0x0000000000202068                hart_id_cnt
+
+.sdata2
+ *(.sdata2 .sdata2.* .gnu.linkonce.s2.*)
+                0x000000000020206c                __DATA_END__ = .
+                0x000000000020206c                __SDATA_END__ = .
+                0x000000000020206c                . = ALIGN (0x4)
+                0x000000000020206c                __BSS_BEGIN__ = .
+
+.sbss
+ *(.dynsbss)
+ *(.sbss .sbss.* .gnu.linkonce.sb.*)
+ *(.scommon)
+
+.sbss2
+ *(.sbss2 .sbss2.* .gnu.linkonce.sb2.*)
+
+.bss            0x000000000020206c        0x0
+ *(.dynbss)
+ *(.bss .bss.* .gnu.linkonce.b.*)
+ .bss           0x000000000020206c        0x0 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/conv.o
+ .bss           0x000000000020206c        0x0 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/main.o
+ .bss           0x000000000020206c        0x0 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/crt0.o
+ .bss           0x000000000020206c        0x0 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/stdio.o
+ *(COMMON)
+                0x000000000020206c                . = ALIGN (0x4)
+                0x000000000020206c                __BSS_END__ = .
+                0x000000000020206c                _end = .
+                0x0000000000202800                __global_pointer$ = MIN ((__SDATA_BEGIN__ + 0x800), MAX ((__DATA_BEGIN__ + 0x800), (__BSS_END__ - 0x800)))
+
+.stack          0x0000000000202070     0x1f90
+                0x0000000000204000                . = ALIGN (MAX (., (ORIGIN (PITO_DATA) + LENGTH (PITO_DATA))), 0x10)
+ *fill*         0x0000000000202070     0x1f90 
+                0x0000000000204000                __stack_top = ALIGN (., 0x10)
+                0x0000000000203000                __stack = ALIGN ((. - 0x1000), 0x10)
+                0x0000000000203000                __stack_base = ALIGN ((. - 0x1000), 0x10)
+
+.io             0x0000000080000000        0x0
+                0x0000000080000000                io = ABSOLUTE (ORIGIN (IO))
+ *(.io)
+                0x0000000080000000                . = .
+
+.interp
+ *(.interp)
+
+.note.gnu.build-id
+ *(.note.gnu.build-id)
+
+.hash
+ *(.hash)
+
+.gnu.hash
+ *(.gnu.hash)
+
+.gnu.version
+ *(.gnu.version)
+
+.gnu.version_d
+ *(.gnu.version_d)
+
+.gnu.version_r
+ *(.gnu.version_r)
+
+.stab
+ *(.stab)
+
+.stabstr
+ *(.stabstr)
+
+.stab.excl
+ *(.stab.excl)
+
+.stab.exclstr
+ *(.stab.exclstr)
+
+.stab.index
+ *(.stab.index)
+
+.stab.indexstr
+ *(.stab.indexstr)
+
+.comment        0x0000000000000000       0x11
+ *(.comment)
+ .comment       0x0000000000000000       0x11 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/conv.o
+                                         0x12 (size before relaxing)
+ .comment       0x0000000000000011       0x12 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/main.o
+ .comment       0x0000000000000011       0x12 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/stdio.o
+
+.riscv.attributes
+                0x0000000000000000       0x1c
+ .riscv.attributes
+                0x0000000000000000       0x1c /users/hemmat/MyRepos/BARVINN/csrc/conv/build/conv.o
+ .riscv.attributes
+                0x000000000000001c       0x1c /users/hemmat/MyRepos/BARVINN/csrc/conv/build/main.o
+ .riscv.attributes
+                0x0000000000000038       0x1a /users/hemmat/MyRepos/BARVINN/csrc/conv/build/crt0.o
+ .riscv.attributes
+                0x0000000000000052       0x1c /users/hemmat/MyRepos/BARVINN/csrc/conv/build/stdio.o
+
+.gnu.build.attributes
+ *(.gnu.build.attributes .gnu.build.attributes.*)
+
+.debug
+ *(.debug)
+
+.line
+ *(.line)
+
+.debug_srcinfo
+ *(.debug_srcinfo)
+
+.debug_sfnames
+ *(.debug_sfnames)
+
+.debug_aranges
+ *(.debug_aranges)
+
+.debug_pubnames
+ *(.debug_pubnames)
+
+.debug_info
+ *(.debug_info .gnu.linkonce.wi.*)
+
+.debug_abbrev
+ *(.debug_abbrev)
+
+.debug_line
+ *(.debug_line .debug_line.* .debug_line_end)
+
+.debug_frame
+ *(.debug_frame)
+
+.debug_str
+ *(.debug_str)
+
+.debug_loc
+ *(.debug_loc)
+
+.debug_macinfo
+ *(.debug_macinfo)
+
+.debug_weaknames
+ *(.debug_weaknames)
+
+.debug_funcnames
+ *(.debug_funcnames)
+
+.debug_typenames
+ *(.debug_typenames)
+
+.debug_varnames
+ *(.debug_varnames)
+
+.debug_pubtypes
+ *(.debug_pubtypes)
+
+.debug_ranges
+ *(.debug_ranges)
+
+.debug_macro
+ *(.debug_macro)
+
+.debug_addr
+ *(.debug_addr)
+
+.gnu.attributes
+ *(.gnu.attributes)
+
+.dynamic        0x0000000080000000        0x0
+ *(.dynamic)
+
+.dynsym         0x0000000080000000        0x0
+ *(.dynsym)
+
+.dynstr         0x0000000080000000        0x0
+ *(.dynstr)
+
+.rela.dyn       0x0000000000204000        0x0 load address 0x0000000000000000
+ *(.rela.init)
+ .rela.init     0x0000000000204000        0x0 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/main.o
+ *(.rela.text .rela.text.* .rela.gnu.linkonce.t.*)
+ .rela.text     0x0000000000204000        0x0 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/main.o
+ .rela.text.io  0x0000000000204000        0x0 /users/hemmat/MyRepos/BARVINN/csrc/conv/build/main.o
+ *(.rela.fini)
+ *(.rela.rodata .rela.rodata.* .rela.gnu.linkonce.r.*)
+ *(.rela.data .rela.data.* .rela.gnu.linkonce.d.*)
+ *(.rela.tdata .rela.tdata.* .rela.gnu.linkonce.td.*)
+ *(.rela.tbss .rela.tbss.* .rela.gnu.linkonce.tb.*)
+ *(.rela.ctors)
+ *(.rela.dtors)
+ *(.rela.got)
+ *(.rela.sdata .rela.sdata.* .rela.gnu.linkonce.s.*)
+ *(.rela.sbss .rela.sbss.* .rela.gnu.linkonce.sb.*)
+ *(.rela.sdata2 .rela.sdata2.* .rela.gnu.linkonce.s2.*)
+ *(.rela.sbss2 .rela.sbss2.* .rela.gnu.linkonce.sb2.*)
+ *(.rela.bss .rela.bss.* .rela.gnu.linkonce.b.*)
+ *(.rela.iplt)
+
+.rela.plt       0x0000000080000000        0x0
+ *(.rela.plt)
+
+.plt            0x0000000080000000        0x0
+ *(.plt)
+
+.iplt           0x0000000080000000        0x0
+ *(.iplt)
+
+.got            0x0000000080000000        0x0
+ *(.got.plt)
+ *(.igot.plt)
+ *(.got)
+ *(.igot)
+                0x0000000000000001                ASSERT ((SIZEOF (.dynamic) == 0x0), .dynamic not zero-sized! Dynamic linking not supported!)
+                0x0000000000000001                ASSERT ((SIZEOF (.dynsym) == 0x0), .dynsym not zero-sized! Dynamic linking not supported!)
+                0x0000000000000001                ASSERT ((SIZEOF (.dynstr) == 0x0), .dynstr not zero-sized! Dynamic linking not supported!)
+                0x0000000000000001                ASSERT ((SIZEOF (.rela.dyn) == 0x0), .rela.dyn not zero-sized! Dynamic linking not supported!)
+                0x0000000000000001                ASSERT ((SIZEOF (.rela.plt) == 0x0), .rela.plt not zero-sized! Dynamic linking not supported!)
+                0x0000000000000001                ASSERT ((SIZEOF (.plt) == 0x0), .plt not zero-sized! Dynamic linking not supported!)
+                0x0000000000000001                ASSERT ((SIZEOF (.iplt) == 0x0), .iplt not zero-sized! Dynamic linking not supported!)
+                0x0000000000000001                ASSERT ((SIZEOF (.got) == 0x0), .got not zero-sized! Dynamic linking not supported!)
+
+.tdata          0x0000000000000000        0x0
+ *(.tdata .tdata.* .gnu.linkonce.td.*)
+
+.tbss           0x0000000000000000        0x0
+ *(.tbss .tbss.* .gnu.linkonce.tb.*)
+ *(.tcommon)
+                0x0000000000000001                ASSERT ((SIZEOF (.tdata) == 0x0), .tdata not zero-sized! Thread-local storage not supported!)
+                0x0000000000000001                ASSERT ((SIZEOF (.tbss) == 0x0), .tbss not zero-sized! Thread-local storage not supported!)
+
+/DISCARD/
+ *(.note.GNU-stack)
+ *(.gnu_debuglink)
+ *(.gnu.lto_*)
+ *(.exception_ranges*)
+ *(.jcr)
+LOAD /users/hemmat/MyRepos/BARVINN/csrc/conv/build/conv.o
+LOAD /users/hemmat/MyRepos/BARVINN/csrc/conv/build/main.o
+LOAD /users/hemmat/MyRepos/BARVINN/csrc/conv/build/crt0.o
+LOAD /users/hemmat/MyRepos/BARVINN/csrc/conv/build/stdio.o
+OUTPUT(/users/hemmat/MyRepos/BARVINN/csrc/conv/build//conv.elf elf32-littleriscv)
