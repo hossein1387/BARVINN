@@ -111,6 +111,9 @@ targets:
         tools: 
             xsim:
                 xelab_options: [--debug, typical, -L, secureip, -L, unisims_ver, -L, unimacro_ver, -L, work.glbl, -L, blk_mem_gen_v8_4_3, --timescale, 1ns/1ps, --define, SIMULATION_MODE]
+            modelsim:
+                vlog_options : [-timescale=1ns/1ps]
+                vsim_options : [-t, 1ps, -suppress, vsim-3009 , -suppress, vopt-7033]
         parameters: [XILINX, firmware, rodata]
         toplevel: testbench_top
     synth:
