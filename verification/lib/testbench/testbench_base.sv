@@ -101,7 +101,7 @@ class barvinn_testbench_base extends BaseObj;
         if (fd)  begin logger.print($sformatf("%s was opened successfully : %0d", hex_file, fd)); end
         else     begin logger.print($sformatf("%s was NOT opened successfully : %0d", hex_file, fd)); $finish(); end
         while (!$feof(fd) && word_cnt<nwords) begin
-            temp = $fgets(line, fd);
+            temp = string'($fgets(line, fd));
             if (line.substr(0, 1) != "//") begin
                 instr_str = line.substr(0, 7);
                 instr_q.push_back(rv32_instr_t'(instr_str.atohex()));

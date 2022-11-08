@@ -32,7 +32,7 @@
 // `define hdl_path_mvu0_mem testbench_top.barvinn_inst.mvu.mvuarray[0].mvunit.bankarray[1].db.b.inst.native_mem_module.blk_mem_gen_v8_4_3_inst.memory
 
 `define hdl_path_mvu0_mem    testbench_top.barvinn_inst.mvu.mvu.mvuarray
-`define hdl_path_mvu0_mem_cell db.b.inst.native_mem_module.blk_mem_gen_v8_4_3_inst.memory
+`define hdl_path_mvu0_mem_cell db.b.inst.native_mem_module.blk_mem_gen_v8_4_4_inst.memory
 `define hdl_path_mvu0_mem_0  `hdl_path_mvu0_mem[0].mvunit.bankarray[0 ].`hdl_path_mvu0_mem_cell
 `define hdl_path_mvu0_mem_1  `hdl_path_mvu0_mem[0].mvunit.bankarray[1 ].`hdl_path_mvu0_mem_cell
 `define hdl_path_mvu0_mem_2  `hdl_path_mvu0_mem[0].mvunit.bankarray[2 ].`hdl_path_mvu0_mem_cell

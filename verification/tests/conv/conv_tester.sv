@@ -35,7 +35,7 @@ class conv_tester extends barvinn_testbench_base;
         if (fd)  begin logger.print($sformatf("%s was opened successfully : %0d", weight_file, fd)); end
         else     begin logger.print($sformatf("%s was NOT opened successfully : %0d", weight_file, fd)); $finish(); end
         while (!$feof(fd)) begin
-            temp = $fgets(line, fd);
+            temp = string'($fgets(line, fd));
             if (line.substr(0, 1) != "//") begin
                 if ($sscanf(line, "%b", temp_dat)) begin
                     // data_q.push_back(temp_dat);
@@ -61,7 +61,7 @@ class conv_tester extends barvinn_testbench_base;
         if (fd)  begin logger.print($sformatf("%s was opened successfully : %0d", input_file, fd)); end
         else     begin logger.print($sformatf("%s was NOT opened successfully : %0d", input_file, fd)); $finish(); end
         while (!$feof(fd)) begin
-            temp = $fgets(line, fd);
+            temp = string'($fgets(line, fd));
             if (line.substr(0, 1) != "//") begin
                 if ($sscanf(line, "%b", temp_dat)) begin
                     // data_q.push_back(temp_dat);
