@@ -73,3 +73,5 @@ If you liked this project, please consider citing our paper:
 }
 ```
 
+Link to our paper on [arXiv](https://arxiv.org/pdf/2301.00290.pdf).
+
