@@ -28,7 +28,7 @@ As mentioned earlier, BARVINN requires RISC-V GCC that supports RV32I. You can e
 Matrix Multiplication
 -----------------------
 
-In this example code, we want to program `MVU[0]` to perform a matrix multiplication. Note that we do not include code for transferring data into MVU's feature map and weight memory. Here we are simply assuming that the data is in the correct format and layout. The following code performs a matrix multiplication between input feature map vector of size `[1x1x1x64]` at 2-bit precision with a weight matrix of size `[1x64x64x16]` at 2-bit precision. The output result is written to `0x400` with 2-bit precision. As we mentioned in the `design` section, the controller (`pito`) configures a job by setting the appropriate CSR registers and then kick starts the job by writing into `mvucommand` CSR register. Although one can monitor the job status by polling the `mvustatus` register, MVU will send an interrupt once the job is done and ready to be read. In the following code block, we first enable global and MVU specific irq (in `enable_mvu_irq` function). We then set the address for the MVU irq handler to service the interrupt (in `__startup_code__`). We then program a matrix multiply job in `mat_mul` function. At this point, we can start to prepare and configure the next job, or we can just wait for an interrupt. For this simple example, we wait for an interrupt from `MVU`. Finally, if everything works as expected, we should see `OK\n` in register `a1`, `a2` and `a3` and in memory address `0x10000000`.
+In this example code, we want to program `MVU[0]` to perform a matrix multiplication. Note that we do not include code for transferring data into MVU's feature map and weight memory. Here we are simply assuming that the data is in the correct format and layout. The following code performs a matrix multiplication between input feature map vector of size `[1x1x1x64]` at 2-bit precision with a weight matrix of size `[1x64x64x16]` at 2-bit precision. The output result is written to `0x400` with 2-bit precision. As we mentioned in the `design` section, the controller (`pito`) configures a job by setting the appropriate CSR registers and then kick starts the job by writing into `mvucommand` CSR register. Although one can monitor the job status by polling the `mvustatus` register, MVU will send an interrupt once the job is done and ready to be read. In the following code block, we first enable global and MVU specific irq (in `enable_mvu_irq` function). We then set the address for the MVU irq handler to service the interrupt (in `__startup_code__`). We then program a matrix multiply job in `mat_mul` function. At this point, we can start to prepare and configure the next job, or we can just wait for an interrupt. For this simple example, we wait for an interrupt from `MVU`. Finally, if everything works as expected, we should see `OK\n` in register `a1`, `a2` and `a3` and in memory address `0x1000`.
 
 .. code:: c
 
@@ -159,7 +159,7 @@ In this example code, we want to program `MVU[0]` to perform a matrix multiplica
 
   // Done with our awesome program!
   prog_end:
-      lui a0,0x10000000>>12
+      lui a0,0x1000>>12
       addi  a1,zero,'O'
       addi  a2,zero,'K'
       addi  a3,zero,'\n'
