@@ -58,3 +58,20 @@ project file for you.
     make html
 
 Then, you can open `./docs/_build/html/index.html` file.
+
+
+
+## Publications
+
+If you liked this project, please consider citing our paper:
+
+```
+@Article{barvinn_aspdac,
+  author={AskariHemmat, MohammadHossein and Bilaniuk, Olexa and Wagner, Sean and Hariri, Yassine and Savaria, Yvon and David, Jean-Pierre},
+  journal= {28th Asia and South Pacific Design Automation Conference ASP-DAC 2023},
+  title  = {BARVINN: Arbitrary Precision DNN Accelerator Controlled by a RISC-V CPU},
+  year   = {2023},
+  doi    = {10.1145/3566097.3567872}
+}
+```
+
