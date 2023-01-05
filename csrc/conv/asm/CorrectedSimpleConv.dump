@@ -1,0 +1,249 @@
+
+CorrectedSimpleConv.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00000000 <reset_vector-0x4>:
+   0:	0040006f          	j	4 <reset_vector>
+
+00000004 <reset_vector>:
+   4:	00000093          	li	ra,0
+   8:	00000213          	li	tp,0
+   c:	00000293          	li	t0,0
+  10:	00000313          	li	t1,0
+  14:	00000393          	li	t2,0
+  18:	00000413          	li	s0,0
+  1c:	00000493          	li	s1,0
+  20:	00000513          	li	a0,0
+  24:	00000593          	li	a1,0
+  28:	00000613          	li	a2,0
+  2c:	00000693          	li	a3,0
+  30:	00000713          	li	a4,0
+  34:	00000793          	li	a5,0
+  38:	00000813          	li	a6,0
+  3c:	00000893          	li	a7,0
+  40:	00000913          	li	s2,0
+  44:	00000993          	li	s3,0
+  48:	00000a13          	li	s4,0
+  4c:	00000513          	li	a0,0
+  50:	00000a93          	li	s5,0
+  54:	00000b13          	li	s6,0
+  58:	00000b93          	li	s7,0
+  5c:	00000c13          	li	s8,0
+  60:	00000c93          	li	s9,0
+  64:	00000d13          	li	s10,0
+  68:	00000d93          	li	s11,0
+  6c:	00000e13          	li	t3,0
+  70:	00000e93          	li	t4,0
+  74:	00000f13          	li	t5,0
+  78:	00000f93          	li	t6,0
+  7c:	3fc00113          	li	sp,1020
+  80:	00000297          	auipc	t0,0x0
+  84:	01028293          	addi	t0,t0,16 # 90 <main>
+  88:	34129073          	csrw	mepc,t0
+  8c:	30200073          	mret
+
+00000090 <main>:
+  90:	ffc10113          	addi	sp,sp,-4
+  94:	00112223          	sw	ra,4(sp)
+  98:	014000ef          	jal	ra,ac <__startup_code__>
+  9c:	108000ef          	jal	ra,1a4 <Conv_0>
+  a0:	00412083          	lw	ra,4(sp)
+  a4:	00410113          	addi	sp,sp,4
+  a8:	20c0006f          	j	2b4 <_prog_end>
+
+000000ac <__startup_code__>:
+  ac:	ffc10113          	addi	sp,sp,-4
+  b0:	00112223          	sw	ra,4(sp)
+  b4:	088000ef          	jal	ra,13c <enable_mvu_irq>
+  b8:	00000537          	lui	a0,0x0
+  bc:	12050513          	addi	a0,a0,288 # 120 <mvu_irq_handler>
+  c0:	30551073          	csrw	mtvec,a0
+  c4:	00412083          	lw	ra,4(sp)
+  c8:	00410113          	addi	sp,sp,4
+  cc:	00008067          	ret
+
+000000d0 <wait_for_mvu_irq>:
+  d0:	fe810113          	addi	sp,sp,-24
+  d4:	00112223          	sw	ra,4(sp)
+  d8:	00812423          	sw	s0,8(sp)
+  dc:	00912623          	sw	s1,12(sp)
+  e0:	01212823          	sw	s2,16(sp)
+  e4:	01312a23          	sw	s3,20(sp)
+  e8:	01412c23          	sw	s4,24(sp)
+
+000000ec <wait_for_mvu_irq_loop>:
+  ec:	342022f3          	csrr	t0,mcause
+  f0:	01f2d293          	srli	t0,t0,0x1f
+  f4:	00100313          	li	t1,1
+  f8:	fe629ae3          	bne	t0,t1,ec <wait_for_mvu_irq_loop>
+  fc:	34201073          	csrw	mcause,zero
+ 100:	00412083          	lw	ra,4(sp)
+ 104:	00812403          	lw	s0,8(sp)
+ 108:	00c12483          	lw	s1,12(sp)
+ 10c:	01012903          	lw	s2,16(sp)
+ 110:	01412983          	lw	s3,20(sp)
+ 114:	01812a03          	lw	s4,24(sp)
+ 118:	01810113          	addi	sp,sp,24
+ 11c:	00008067          	ret
+
+00000120 <mvu_irq_handler>:
+ 120:	30005073          	csrwi	mstatus,0
+ 124:	00100313          	li	t1,1
+ 128:	01031313          	slli	t1,t1,0x10
+ 12c:	34433073          	csrc	mip,t1
+ 130:	00000013          	nop
+ 134:	008000ef          	jal	ra,13c <enable_mvu_irq>
+ 138:	30200073          	mret
+
+0000013c <enable_mvu_irq>:
+ 13c:	ffc10113          	addi	sp,sp,-4
+ 140:	00112223          	sw	ra,4(sp)
+ 144:	30045073          	csrwi	mstatus,8
+ 148:	00100293          	li	t0,1
+ 14c:	01029293          	slli	t0,t0,0x10
+ 150:	30429073          	csrw	mie,t0
+ 154:	00010093          	mv	ra,sp
+ 158:	00412083          	lw	ra,4(sp)
+ 15c:	00410113          	addi	sp,sp,4
+ 160:	00008067          	ret
+
+00000164 <disable_mvu_irq>:
+ 164:	ffc10113          	addi	sp,sp,-4
+ 168:	00112223          	sw	ra,4(sp)
+ 16c:	00100293          	li	t0,1
+ 170:	01029293          	slli	t0,t0,0x10
+ 174:	fff2c293          	not	t0,t0
+ 178:	30429073          	csrw	mie,t0
+ 17c:	00010093          	mv	ra,sp
+ 180:	00412083          	lw	ra,4(sp)
+ 184:	00410113          	addi	sp,sp,4
+ 188:	00008067          	ret
+
+0000018c <clear_mvu_pending_irq>:
+ 18c:	ffc10113          	addi	sp,sp,-4
+ 190:	00112223          	sw	ra,4(sp)
+ 194:	34407073          	csrci	mip,0
+ 198:	00412083          	lw	ra,4(sp)
+ 19c:	00410113          	addi	sp,sp,4
+ 1a0:	00008067          	ret
+
+000001a4 <Conv_0>:
+ 1a4:	ffc10113          	addi	sp,sp,-4
+ 1a8:	00112223          	sw	ra,4(sp)
+ 1ac:	014000ef          	jal	ra,1c0 <Conv_0_init>
+ 1b0:	0a8000ef          	jal	ra,258 <Conv_0_loop>
+ 1b4:	00412083          	lw	ra,4(sp)
+ 1b8:	00410113          	addi	sp,sp,4
+ 1bc:	00008067          	ret
+
+000001c0 <Conv_0_init>:
+ 1c0:	ffc10113          	addi	sp,sp,-4
+ 1c4:	00112223          	sw	ra,4(sp)
+ 1c8:	00000313          	li	t1,0
+ 1cc:	00200393          	li	t2,2
+ 1d0:	00730333          	add	t1,t1,t2
+ 1d4:	00200393          	li	t2,2
+ 1d8:	00639e13          	slli	t3,t2,0x6
+ 1dc:	01c30333          	add	t1,t1,t3
+ 1e0:	00800393          	li	t2,8
+ 1e4:	00c39e13          	slli	t3,t2,0xc
+ 1e8:	01c30333          	add	t1,t1,t3
+ 1ec:	f4631073          	csrw	0xf46,t1
+ 1f0:	f3f05073          	csrwi	0xf3f,0
+ 1f4:	f3e15073          	csrwi	0xf3e,2
+ 1f8:	f3d15073          	csrwi	0xf3d,2
+ 1fc:	f3c1d073          	csrwi	0xf3c,3
+ 200:	f2e05073          	csrwi	0xf2e,0
+ 204:	f2d15073          	csrwi	0xf2d,2
+ 208:	03c00293          	li	t0,60
+ 20c:	f2c29073          	csrw	0xf2c,t0
+ 210:	f7c00293          	li	t0,-132
+ 214:	f2b29073          	csrw	0xf2b,t0
+ 218:	f7c00293          	li	t0,-132
+ 21c:	f2a29073          	csrw	0xf2a,t0
+ 220:	f3b05073          	csrwi	0xf3b,0
+ 224:	f3a45073          	csrwi	0xf3a,8
+ 228:	f391d073          	csrwi	0xf39,3
+ 22c:	f3805073          	csrwi	0xf38,0
+ 230:	f2905073          	csrwi	0xf29,0
+ 234:	f2815073          	csrwi	0xf28,2
+ 238:	ff000293          	li	t0,-16
+ 23c:	f2729073          	csrw	0xf27,t0
+ 240:	f2615073          	csrwi	0xf26,2
+ 244:	ff000293          	li	t0,-16
+ 248:	f2529073          	csrw	0xf25,t0
+ 24c:	00412083          	lw	ra,4(sp)
+ 250:	00410113          	addi	sp,sp,4
+ 254:	00008067          	ret
+
+00000258 <Conv_0_loop>:
+ 258:	ffc10113          	addi	sp,sp,-4
+ 25c:	00112223          	sw	ra,4(sp)
+ 260:	02000413          	li	s0,32
+ 264:	00000493          	li	s1,0
+ 268:	00000913          	li	s2,0
+ 26c:	00000993          	li	s3,0
+ 270:	00100a13          	li	s4,1
+ 274:	01ea1a13          	slli	s4,s4,0x1e
+ 278:	43800293          	li	t0,1080
+ 27c:	005a0a33          	add	s4,s4,t0
+
+00000280 <loop>:
+ 280:	f493d073          	csrwi	0xf49,7
+ 284:	f2091073          	csrw	0xf20,s2
+ 288:	f2199073          	csrw	0xf21,s3
+ 28c:	f2449073          	csrw	0xf24,s1
+ 290:	f48a1073          	csrw	0xf48,s4
+ 294:	e3dff0ef          	jal	ra,d0 <wait_for_mvu_irq>
+ 298:	fff40413          	addi	s0,s0,-1
+ 29c:	00848493          	addi	s1,s1,8
+ 2a0:	00298993          	addi	s3,s3,2
+ 2a4:	fc041ee3          	bnez	s0,280 <loop>
+ 2a8:	00412083          	lw	ra,4(sp)
+ 2ac:	00410113          	addi	sp,sp,4
+ 2b0:	00008067          	ret
+
+000002b4 <_prog_end>:
+ 2b4:	10000537          	lui	a0,0x10000
+ 2b8:	04f00593          	li	a1,79
+ 2bc:	04b00613          	li	a2,75
+ 2c0:	00a00693          	li	a3,10
+ 2c4:	00b52023          	sw	a1,0(a0) # 10000000 <_end+0xffffd00>
+ 2c8:	00c52023          	sw	a2,0(a0)
+ 2cc:	00d52023          	sw	a3,0(a0)
+ 2d0:	00100073          	ebreak
+
+000002d4 <_fail>:
+ 2d4:	10000537          	lui	a0,0x10000
+ 2d8:	04e00593          	li	a1,78
+ 2dc:	04f00613          	li	a2,79
+ 2e0:	04b00693          	li	a3,75
+ 2e4:	00a00713          	li	a4,10
+ 2e8:	00b52023          	sw	a1,0(a0) # 10000000 <_end+0xffffd00>
+ 2ec:	00c52023          	sw	a2,0(a0)
+ 2f0:	00d52023          	sw	a3,0(a0)
+ 2f4:	00e52023          	sw	a4,0(a0)
+ 2f8:	00100073          	ebreak
+
+Disassembly of section .data:
+
+000002fc <_end-0x4>:
+ 2fc:	0000                	unimp
+	...
+
+Disassembly of section .riscv.attributes:
+
+00000000 <.riscv.attributes>:
+   0:	1941                	addi	s2,s2,-16
+   2:	0000                	unimp
+   4:	7200                	flw	fs0,32(a2)
+   6:	7369                	lui	t1,0xffffa
+   8:	01007663          	bgeu	zero,a6,14 <reset_vector+0x10>
+   c:	0000000f          	fence	unknown,unknown
+  10:	7205                	lui	tp,0xfffe1
+  12:	3376                	fld	ft6,376(sp)
+  14:	6932                	flw	fs2,12(sp)
+  16:	7032                	flw	ft0,44(sp)
+  18:	0030                	addi	a2,sp,8

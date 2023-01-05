@@ -161,6 +161,7 @@ add_wave_group pipeline
 add_wave_group csr
     add_wave_group -into csr csr0
             add_wave -into csr0  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[0].csrfile /mvu_irq_i}}
+            add_wave -into csr0  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[0].csrfile /mcause_q}} 
             add_wave -into csr0  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[0].csrfile /mvu_start}}
             add_wave -into csr0  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[0].csrfile /csr_mvucommand}}
             add_wave -into csr0 {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[0].csrfile /csr_mvuprecision}}
@@ -172,42 +173,49 @@ add_wave_group csr
 
     add_wave_group -into csr csr1
             add_wave -into csr1  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[1].csrfile /mvu_irq_i}}
+            add_wave -into csr1  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[1].csrfile /mcause_q}} 
             add_wave -into csr1  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[1].csrfile /mvu_start}}
             add_wave -into csr1  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[1].csrfile /csr_mvucommand}}
             add_wave -into csr1 {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[1].csrfile /csr_mvuprecision}}
             add_wave -into csr1 {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[1].csrfile /csr_op}}
     add_wave_group -into csr csr2
             add_wave -into csr2  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[2].csrfile /mvu_irq_i}}
+            add_wave -into csr2  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[2].csrfile /mcause_q}} 
             add_wave -into csr2  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[2].csrfile /mvu_start}}
             add_wave -into csr2  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[2].csrfile /csr_mvucommand}}
             add_wave -into csr2 {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[2].csrfile /csr_mvuprecision}}
             add_wave -into csr2 {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[2].csrfile /csr_op}}
     add_wave_group -into csr csr3
             add_wave -into csr3  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[3].csrfile /mvu_irq_i}}
+            add_wave -into csr3  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[3].csrfile /mcause_q}} 
             add_wave -into csr3  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[3].csrfile /mvu_start}}
             add_wave -into csr3  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[3].csrfile /csr_mvucommand}}
             add_wave -into csr3 {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[3].csrfile /csr_mvuprecision}}
             add_wave -into csr3 {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[3].csrfile /csr_op}}
     add_wave_group -into csr csr4
             add_wave -into csr4  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[4].csrfile /mvu_irq_i}}
+            add_wave -into csr4  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[4].csrfile /mcause_q}} 
             add_wave -into csr4  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[4].csrfile /mvu_start}}
             add_wave -into csr4  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[4].csrfile /csr_mvucommand}}
             add_wave -into csr4 {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[4].csrfile /csr_mvuprecision}}
             add_wave -into csr4 {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[4].csrfile /csr_op}}
     add_wave_group -into csr csr5
             add_wave -into csr5  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[5].csrfile /mvu_irq_i}}
+            add_wave -into csr5  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[5].csrfile /mcause_q}} 
             add_wave -into csr5  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[5].csrfile /mvu_start}}
             add_wave -into csr5  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[5].csrfile /csr_mvucommand}}
             add_wave -into csr5 {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[5].csrfile /csr_mvuprecision}}
             add_wave -into csr5 {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[5].csrfile /csr_op}}
     add_wave_group -into csr csr6
             add_wave -into csr6 {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[6].csrfile /mvu_irq_i}}
+            add_wave -into csr6  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[6].csrfile /mcause_q}} 
             add_wave -into csr6 {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[6].csrfile /mvu_start}}
             add_wave -into csr6 {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[6].csrfile /csr_mvucommand}}
             add_wave -into csr6 {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[6].csrfile /csr_mvuprecision}}
             add_wave -into csr6 {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[6].csrfile /csr_op}}
     add_wave_group -into csr csr7
             add_wave -into csr7 {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[7].csrfile /mvu_irq_i}}
+            add_wave -into csr7  {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[7].csrfile /mcause_q}} 
             add_wave -into csr7 {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[7].csrfile /mvu_start}}
             add_wave -into csr7 {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[7].csrfile /csr_mvucommand}}
             add_wave -into csr7 {{/testbench_top/barvinn_inst/pito_rv32_core/csr/\genblk1[7].csrfile /csr_mvuprecision}}

@@ -1,5 +1,5 @@
-`include "pito_inf.svh"
-`include "core_tester.sv"
+// `include "matmul_tester.sv"
+`include "conv_tester.sv"
 
 
 module testbench_top import utils::*;();
@@ -10,19 +10,17 @@ module testbench_top import utils::*;();
     string sim_log_file = "testbench_top.log";
 //==================================================================================================
     logic clk;
-    pito_interface pito_intf(clk);
-    mvu_interface mvu_intf(clk);
-    barvinn_interface barvinn_intf(clk);
-    barvinn barvinn_inst(.pito_intf(pito_intf),
-                      .mvu_intf(mvu_intf),
-                      .barvinn_intf(barvinn_intf));
-
+    pito_soc_ext_interface pito_intf(clk);
+    MVU_EXT_INTERFACE mvu_intf(clk);
+    barvinn barvinn_inst(.pito_ext_intf(pito_intf),
+                         .mvu_ext_intf(mvu_intf));
+                     
     // interface_tester tb;
-    core_tester tb;
+    conv_tester tb;
 
     initial begin
         logger = new(sim_log_file);
-        tb = new(logger, pito_intf.tb_interface);
+        tb = new(logger, mvu_intf, pito_intf);
 
         tb.tb_setup();
         tb.run();
@@ -43,7 +41,7 @@ module testbench_top import utils::*;();
     end
 
     initial begin
-        #1ms;
+        #1000ms;
         $display("Simulation took more than expected ( more than 600ms)");
         $finish();
     end

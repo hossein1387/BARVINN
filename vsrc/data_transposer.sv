@@ -1,4 +1,4 @@
-`timescale 1 ps / 1 ps
+`timescale 1ns/1ps
     // Data transposer's job is to write input data (that is stored in a processor RAM
     // in linear format) into MVU RAM in a transposed format. The input word can be packed
     // of 2,4,8 or 16 bits data. Given the input data precision (prec) the transposer will
