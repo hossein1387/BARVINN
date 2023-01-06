@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'BARVINN'
-copyright = '2021, '
+copyright = '2023, '
 author = 'MohammadHossein AskariHemmat, Olexa Bilaniuk, Sean Wagner'
 
 
