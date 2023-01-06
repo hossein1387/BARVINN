@@ -25,3 +25,7 @@ This project was financially supported by the following organizations:
   :alt: Alternative text
   :target: http://www.frqnt.gouv.qc.ca/
 
+.. figure:: _static/mitacs_transparent.png
+  :width: 200
+  :alt: Alternative text
+  :target: https://www.mitacs.ca/en
