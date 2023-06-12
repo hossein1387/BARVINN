@@ -22,28 +22,28 @@ void irq_handler(){
     enable_mvu_irq();
 }
 
-void dma_load_data(int hart_id, int src_addr, int dst_addr, int blksize){
-    // This funciton will trigger a DMA read from host.
-    // src_addr: Host source address.
-    // dst_addr: MVU destination address.
-    // blksize: Chunk of memory to load from host
-    // The DMA engine, expects destination address and block size
-    // to be written to t0 and t1 respectively.
-    SET_CSR(CSR_DMADSTADDR, dst_addr);
-    SET_CSR(CSR_DMABLKSIZE, blksize);
-    __asm__ volatile("lw t0, %0" : "=m" (src_addr));
-    // technically we should wait for a DMA interrupt
-    // wait_for_dma_irq();
-}
+// void dma_load_data(int hart_id, int src_addr, int dst_addr, int blksize){
+//     // This funciton will trigger a DMA read from host.
+//     // src_addr: Host source address.
+//     // dst_addr: MVU destination address.
+//     // blksize: Chunk of memory to load from host
+//     // The DMA engine, expects destination address and block size
+//     // to be written to t0 and t1 respectively.
+//     SET_CSR(CSR_DMADSTADDR, dst_addr);
+//     SET_CSR(CSR_DMABLKSIZE, blksize);
+//     __asm__ volatile("lw t0, %0" : "=m" (src_addr));
+//     // technically we should wait for a DMA interrupt
+//     // wait_for_dma_irq();
+// }
 
 void main_thread(const int hart_id){
     int iaddr, oaddr, waddr;
-    int wbase_addr = DMA_START_ADDR;
+    int wbase_addr = 0;
     int iofst=0, oofst=0, wofst=0;
 
     SET_CSR(mtvec, &irq_handler);
     enable_mvu_irq();
-    dma_load_data(hart_id, wbase_addr, wofst, layer_blk_size_kb[0]);
+    // dma_load_data(hart_id, wbase_addr, wofst, layer_blk_size_kb[0]);
     wbase_addr += layer_blk_size_kb[0];
     conv3x3_64(hart_id, iofst, oofst, wofst, layer_out_row_size[0], &iaddr, &oaddr, &waddr);
     iofst += *(&iaddr);
@@ -51,7 +51,7 @@ void main_thread(const int hart_id){
     wofst += *(&waddr);
     // load_weigths(hart_id);
 
-    dma_load_data(hart_id, wbase_addr, wofst, layer_blk_size_kb[1]);
+    // dma_load_data(hart_id, wbase_addr, wofst, layer_blk_size_kb[1]);
     wbase_addr += layer_blk_size_kb[1];
     conv3x3_64(hart_id, iofst,oofst,wofst, layer_out_row_size[1], &iaddr, &oaddr, &waddr);
     iofst += *(&iaddr);
@@ -61,7 +61,7 @@ void main_thread(const int hart_id){
     if (hart_id==0){
         printf("%d, %d, %d\n", iofst, oofst, wofst);
     }
-    while(1){};
+    // while(1){};
 }
 
 int main(){

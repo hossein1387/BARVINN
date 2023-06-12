@@ -66,7 +66,14 @@ module barvinn #(
 
     mvutop_wrapper mvu(.mvu_ext_if(mvu_ext_intf),
                        .apb(apb_interface.Slave));
-    pito_soc soc(.ext_intf(pito_ext_intf.soc_ext), 
-                 .mvu_apb(apb_interface.Master));
+    pito_soc soc(
+        .sys_clk_i   (sys_clk_i  ),
+        .sys_rst_n_i (sys_rst_n_i),
+        .mvu_irq_i   (mvu_irq_i),
+        .uart_rx_i   (uart_rx_i),
+        .uart_tx_o   (uart_tx_i),
+        .m_axi       ( ),
+        .mvu_apb     ( )
+    );
 
 endmodule
