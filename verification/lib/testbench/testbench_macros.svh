@@ -30,38 +30,7 @@
 //`define hdl_path_mvu0_mem_fcn(mvu, bank)  `hdl_path_mvu0_mem[mvu].mvunit.bankarray[bank].`hdl_path_mvu0_mem_cell
 
 // `define hdl_path_mvu0_mem testbench_top.barvinn_inst.mvu.mvuarray[0].mvunit.bankarray[1].db.b.inst.native_mem_module.blk_mem_gen_v8_4_3_inst.memory
-
-`define hdl_path_mvu0_mem    testbench_top.barvinn_inst.mvu.mvu.mvuarray
-`define hdl_path_mvu0_mem_cell db.b.inst.native_mem_module.blk_mem_gen_v8_4_3_inst.memory
-`define hdl_path_mvu0_mem_0  `hdl_path_mvu0_mem[0].mvunit.bankarray[0 ].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_1  `hdl_path_mvu0_mem[0].mvunit.bankarray[1 ].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_2  `hdl_path_mvu0_mem[0].mvunit.bankarray[2 ].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_3  `hdl_path_mvu0_mem[0].mvunit.bankarray[3 ].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_4  `hdl_path_mvu0_mem[0].mvunit.bankarray[4 ].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_5  `hdl_path_mvu0_mem[0].mvunit.bankarray[5 ].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_6  `hdl_path_mvu0_mem[0].mvunit.bankarray[6 ].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_7  `hdl_path_mvu0_mem[0].mvunit.bankarray[7 ].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_8  `hdl_path_mvu0_mem[0].mvunit.bankarray[8 ].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_9  `hdl_path_mvu0_mem[0].mvunit.bankarray[9 ].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_10 `hdl_path_mvu0_mem[0].mvunit.bankarray[10].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_11 `hdl_path_mvu0_mem[0].mvunit.bankarray[11].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_12 `hdl_path_mvu0_mem[0].mvunit.bankarray[12].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_13 `hdl_path_mvu0_mem[0].mvunit.bankarray[13].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_14 `hdl_path_mvu0_mem[0].mvunit.bankarray[14].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_15 `hdl_path_mvu0_mem[0].mvunit.bankarray[15].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_16 `hdl_path_mvu0_mem[0].mvunit.bankarray[16].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_17 `hdl_path_mvu0_mem[0].mvunit.bankarray[17].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_18 `hdl_path_mvu0_mem[0].mvunit.bankarray[18].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_19 `hdl_path_mvu0_mem[0].mvunit.bankarray[19].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_20 `hdl_path_mvu0_mem[0].mvunit.bankarray[20].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_21 `hdl_path_mvu0_mem[0].mvunit.bankarray[21].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_22 `hdl_path_mvu0_mem[0].mvunit.bankarray[22].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_23 `hdl_path_mvu0_mem[0].mvunit.bankarray[23].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_24 `hdl_path_mvu0_mem[0].mvunit.bankarray[24].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_25 `hdl_path_mvu0_mem[0].mvunit.bankarray[25].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_26 `hdl_path_mvu0_mem[0].mvunit.bankarray[26].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_27 `hdl_path_mvu0_mem[0].mvunit.bankarray[27].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_28 `hdl_path_mvu0_mem[0].mvunit.bankarray[28].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_29 `hdl_path_mvu0_mem[0].mvunit.bankarray[29].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_30 `hdl_path_mvu0_mem[0].mvunit.bankarray[30].`hdl_path_mvu0_mem_cell
-`define hdl_path_mvu0_mem_31 `hdl_path_mvu0_mem[0].mvunit.bankarray[31].`hdl_path_mvu0_mem_cell
+`define hdl_path_mvu_top           testbench_top.barvinn_inst.mvu
+`define hdl_path_mvu_data_mem(mvu_num) `hdl_path_mvu_top.mvu.mvuarray[mvu_num]
+`define hdl_path_mvu_data_mem_bank(mvu_num, bank) `hdl_path_mvu_data_mem(mvu_num).mvuunit.bankarray[bank]
+`define hdl_path_mvu_data_mem_bank_ram(mvu_num, bank) `hdl_path_mvu_data_mem_bank(mvu_num, bank).db.data_ram.mem
