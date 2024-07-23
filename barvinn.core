@@ -84,14 +84,6 @@ filesets:
             - deps/MVU/verification/lib/mvu/mvu_pkg.sv
             - deps/MVU/verification/lib/mvu/mvu_intf.sv
             - deps/MVU/verification/lib/testbench/testbench_config.sv
-            - deps/MVU/ip/build/xilinx/bram64k_64x1024_xilinx/simulation/blk_mem_gen_v8_4.v:
-                file_type: verilogSource
-            - deps/MVU/ip/build/xilinx/bram64k_64x1024_xilinx/sim/bram64k_64x1024_xilinx.v:
-                file_type: verilogSource
-            - deps/MVU/ip/build/xilinx/bram2m_xilinx/simulation/blk_mem_gen_v8_4.v:
-                file_type: verilogSource
-            - deps/MVU/ip/build/xilinx/bram2m_xilinx/sim/bram2m_xilinx.v:
-                file_type: verilogSource
             - verification/lib/barvinn/barvinn_intf.sv: 
                 is_include_file: true
             - verification/lib/testbench/testbench_base.sv
